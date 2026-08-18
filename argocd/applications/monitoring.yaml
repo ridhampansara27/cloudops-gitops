@@ -1,0 +1,85 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: monitoring
+  namespace: argocd
+
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+
+spec:
+  project: default
+
+  source:
+    # Use the official Prometheus Community Helm repository.
+    repoURL: https://prometheus-community.github.io/helm-charts
+
+    chart: kube-prometheus-stack
+
+    # Pin the chart for reproducible deployments.
+    targetRevision: "87.21.0"
+
+    helm:
+      releaseName: kube-prometheus-stack
+
+      values: |
+        grafana:
+          enabled: true
+
+          defaultDashboardsEnabled: true
+
+          persistence:
+            enabled: false
+
+        prometheus:
+          enabled: true
+
+          prometheusSpec:
+            retention: 24h
+
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+
+        alertmanager:
+          enabled: true
+
+        # These control-plane endpoints are not always exposed
+        # in a local Kind cluster and can generate misleading alerts.
+        kubeControllerManager:
+          enabled: false
+
+        kubeScheduler:
+          enabled: false
+
+        kubeEtcd:
+          enabled: false
+
+  destination:
+    server: https://kubernetes.default.svc
+
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+
+    syncOptions:
+      - CreateNamespace=true
+
+    retry:
+      limit: 5
+
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
