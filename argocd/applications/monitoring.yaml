@@ -66,35 +66,47 @@ spec:
 
     namespace: monitoring
 
+    # Configure how Argo CD synchronizes the monitoring application.
   syncPolicy:
-  # Automatically synchronize Git/Helm desired state into Kubernetes.
-  automated:
-    # Enable automatic synchronization.
-    enabled: true
 
-    # Remove resources that disappear from the desired state.
-    prune: true
+    # Automatically synchronize the desired state.
+    automated:
 
-    # Restore resources when manual cluster drift occurs.
-    selfHeal: true
+      # Enable automatic synchronization.
+      enabled: true
 
-    # Do not consider an empty rendered application valid.
-    allowEmpty: false
+      # Delete resources removed from the desired state.
+      prune: true
 
-  # Configure how Argo CD applies Kubernetes resources.
-  syncOptions:
-    # Automatically create the monitoring namespace if it is missing.
-    - CreateNamespace=true
+      # Automatically correct manual changes in Kubernetes.
+      selfHeal: true
 
-    # Use Kubernetes Server-Side Apply.
-    # This avoids the 262144-byte client-side apply annotation limit
-    # encountered by the large Prometheus Operator CRDs.
-    - ServerSideApply=true
+      # Prevent an empty application from being accepted.
+      allowEmpty: false
 
+    # Configure additional synchronization behavior.
+    syncOptions:
+
+      # Create the monitoring namespace when required.
+      - CreateNamespace=true
+
+      # Use Server-Side Apply for the large Prometheus Operator CRDs.
+      - ServerSideApply=true
+
+    # Retry failed synchronization attempts.
     retry:
+
+      # Maximum number of retries.
       limit: 5
 
+      # Configure exponential retry backoff.
       backoff:
+
+        # Initial retry delay.
         duration: 10s
+
+        # Double the delay after every failed attempt.
         factor: 2
+
+        # Maximum delay between retries.
         maxDuration: 3m
