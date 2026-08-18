@@ -3,6 +3,9 @@ kind: ConfigMap
 
 metadata:
   name: cloudops-config
+  annotations:
+    # Create application configuration before the database migration Job.
+    argocd.argoproj.io/sync-wave: "-2"
 
 data:
   # Configure FastAPI runtime environment.
