@@ -1,0 +1,25 @@
+environment: stage
+
+backend:
+  replicaCount: 2
+
+  image:
+    repository: "ghcr.io/ridhampansara27/cloudops-insight-backend"
+    tag: "not-deployed-yet"
+    pullPolicy: IfNotPresent
+
+frontend:
+  replicaCount: 2
+
+  image:
+    repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
+    tag: "not-deployed-yet"
+    pullPolicy: IfNotPresent
+
+ingress:
+  enabled: true
+  className: nginx
+  host: cloudops-stage.example.com
+
+secrets:
+  existingSecret: cloudops-secrets

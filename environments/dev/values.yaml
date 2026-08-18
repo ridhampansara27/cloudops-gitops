@@ -1,0 +1,68 @@
+# Identify deployment environment.
+environment: dev
+
+
+# ------------------------------------------------------------
+# Backend
+# ------------------------------------------------------------
+
+backend:
+  replicaCount: 2
+
+  image:
+    # Start using the Kind-loaded local image.
+    # GitHub Actions will replace this after the first GHCR deployment.
+    repository: "cloudops-backend" # backend-image-repository
+
+    tag: "local" # backend-image-tag
+
+    pullPolicy: IfNotPresent
+
+
+# ------------------------------------------------------------
+# Frontend
+# ------------------------------------------------------------
+
+frontend:
+  replicaCount: 2
+
+  image:
+    repository: "cloudops-frontend" # frontend-image-repository
+
+    tag: "local" # frontend-image-tag
+
+    pullPolicy: IfNotPresent
+
+
+# ------------------------------------------------------------
+# Application ingress
+# ------------------------------------------------------------
+
+ingress:
+  enabled: true
+
+  className: nginx
+
+  host: cloudops.local
+
+
+# ------------------------------------------------------------
+# Development autoscaling
+# ------------------------------------------------------------
+
+autoscaling:
+  enabled: true
+
+  minReplicas: 2
+
+  maxReplicas: 5
+
+  targetCPUUtilizationPercentage: 70
+
+
+# ------------------------------------------------------------
+# Existing manually-created Kubernetes Secret
+# ------------------------------------------------------------
+
+secrets:
+  existingSecret: cloudops-secrets

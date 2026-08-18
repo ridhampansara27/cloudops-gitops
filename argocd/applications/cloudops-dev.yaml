@@ -1,0 +1,87 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: cloudops-dev
+
+  # Argo Application resources live inside the Argo namespace.
+  namespace: argocd
+
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+
+spec:
+  # Use the default Argo CD project for now.
+  project: default
+
+  source:
+    # GitOps repository contains the desired Kubernetes state.
+    repoURL: https://github.com/ridhampansara27/cloudops-gitops.git
+
+    # Track the GitOps main branch.
+    targetRevision: main
+
+    # Deploy the CloudOps Helm chart.
+    path: charts/cloudops-insight
+
+    helm:
+      # Keep the existing release name.
+      releaseName: cloudops
+
+      # Apply development-specific overrides.
+      valueFiles:
+        - ../../environments/dev/values.yaml
+
+  destination:
+    # Deploy into the same Kubernetes cluster as Argo CD.
+    server: https://kubernetes.default.svc
+
+    # Deploy CloudOps into its application namespace.
+    namespace: cloudops
+
+  syncPolicy:
+    automated:
+      # Enable automatic reconciliation.
+      enabled: true
+
+      # Remove Kubernetes objects deleted from Git.
+      prune: true
+
+      # Revert manual Kubernetes drift.
+      selfHeal: true
+
+      # Protect against accidentally deleting every application resource.
+      allowEmpty: false
+
+    syncOptions:
+      # Create the destination namespace if required.
+      - CreateNamespace=true
+
+      # Apply pruning after healthy resources are synchronized.
+      - PruneLast=true
+
+      # Respect explicitly ignored differences.
+      - RespectIgnoreDifferences=true
+
+    retry:
+      # Retry temporary failed synchronizations.
+      limit: 5
+
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # HPA controls backend Deployment replicas.
+  #
+  # Without this rule Argo and HPA could continuously disagree
+  # about spec.replicas.
+  ignoreDifferences:
+    - group: apps
+
+      kind: Deployment
+
+      name: cloudops-backend
+
+      jsonPointers:
+        - /spec/replicas
