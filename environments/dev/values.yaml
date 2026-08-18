@@ -14,7 +14,7 @@ backend:
     # GitHub Actions will replace this after the first GHCR deployment.
     repository: "ghcr.io/ridhampansara27/cloudops-insight-backend" # backend-image-repository
 
-    tag: "sha-340cbacd128a114f9c4592e95de6153c3c101198" # backend-image-tag
+    tag: "does-not-exist" # backend-image-tag
 
     pullPolicy: IfNotPresent
 
