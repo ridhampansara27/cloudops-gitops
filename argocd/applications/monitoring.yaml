@@ -67,14 +67,29 @@ spec:
     namespace: monitoring
 
   syncPolicy:
-    automated:
-      enabled: true
-      prune: true
-      selfHeal: true
-      allowEmpty: false
+  # Automatically synchronize Git/Helm desired state into Kubernetes.
+  automated:
+    # Enable automatic synchronization.
+    enabled: true
 
-    syncOptions:
-      - CreateNamespace=true
+    # Remove resources that disappear from the desired state.
+    prune: true
+
+    # Restore resources when manual cluster drift occurs.
+    selfHeal: true
+
+    # Do not consider an empty rendered application valid.
+    allowEmpty: false
+
+  # Configure how Argo CD applies Kubernetes resources.
+  syncOptions:
+    # Automatically create the monitoring namespace if it is missing.
+    - CreateNamespace=true
+
+    # Use Kubernetes Server-Side Apply.
+    # This avoids the 262144-byte client-side apply annotation limit
+    # encountered by the large Prometheus Operator CRDs.
+    - ServerSideApply=true
 
     retry:
       limit: 5
