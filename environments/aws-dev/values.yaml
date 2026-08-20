@@ -7,17 +7,17 @@ environment: dev
 # ------------------------------------------------------------
 
 backend:
-  # Keep two application replicas.
+  # Run two backend replicas in EKS.
   replicaCount: 2
 
   image:
-    # Use the existing immutable GHCR application image.
+    # Pull the backend image from GitHub Container Registry.
     repository: "ghcr.io/ridhampansara27/cloudops-insight-backend"
 
-    # Copy the current SHA from environments/dev/values.yaml.
-    tag: "COPY_CURRENT_SHA_HERE"
+    # Use the existing immutable application image.
+    tag: "sha-340cbacd128a114f9c4592e95de6153c3c101198"
 
-    # Allow EKS to pull the container when missing.
+    # Reuse the locally cached image when available.
     pullPolicy: IfNotPresent
 
 
@@ -26,14 +26,17 @@ backend:
 # ------------------------------------------------------------
 
 frontend:
+  # Run two frontend replicas in EKS.
   replicaCount: 2
 
   image:
+    # Pull the frontend image from GitHub Container Registry.
     repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
 
-    # Use the same current application build.
-    tag: "COPY_CURRENT_SHA_HERE"
+    # Use the same immutable application build currently used by dev.
+    tag: "sha-340cbacd128a114f9c4592e95de6153c3c101198"
 
+    # Reuse the locally cached image when available.
     pullPolicy: IfNotPresent
 
 
