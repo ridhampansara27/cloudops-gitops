@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  # Identify the AWS EKS deployment independently from Kind.
+  name: cloudops-aws-dev
+
+  # Store the Application CR in Argo CD.
+  namespace: argocd
+
+spec:
+  # Use Argo's default project.
+  project: default
+
+  source:
+    # GitOps is the source of truth.
+    repoURL: https://github.com/ridhampansara27/cloudops-gitops.git
+
+    # Track GitOps main.
+    targetRevision: main
+
+    # Deploy the shared Helm chart.
+    path: charts/cloudops-insight
+
+    helm:
+      # Keep the normal CloudOps Helm release name.
+      releaseName: cloudops
+
+      # Use the AWS-specific configuration.
+      valueFiles:
+        - ../../environments/aws-dev/values.yaml
+
+  destination:
+    # Argo is running inside this EKS cluster.
+    server: https://kubernetes.default.svc
+
+    # Deploy CloudOps here.
+    namespace: cloudops
+
+  syncPolicy:
+    automated:
+      # Reconcile Git automatically.
+      enabled: true
+
+      # Remove resources removed from Git.
+      prune: true
+
+      # Repair manual drift.
+      selfHeal: true
+
+      # Protect against accidentally empty desired state.
+      allowEmpty: false
+
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true

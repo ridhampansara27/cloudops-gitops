@@ -17,6 +17,7 @@ spec:
         app: cloudops-worker
 
     spec:
+      serviceAccountName: cloudops-aws
       containers:
         - name: worker
 

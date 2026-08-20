@@ -1,0 +1,90 @@
+# Identify the EKS development environment.
+environment: dev
+
+
+# ------------------------------------------------------------
+# Backend
+# ------------------------------------------------------------
+
+backend:
+  # Keep two application replicas.
+  replicaCount: 2
+
+  image:
+    # Use the existing immutable GHCR application image.
+    repository: "ghcr.io/ridhampansara27/cloudops-insight-backend"
+
+    # Copy the current SHA from environments/dev/values.yaml.
+    tag: "COPY_CURRENT_SHA_HERE"
+
+    # Allow EKS to pull the container when missing.
+    pullPolicy: IfNotPresent
+
+
+# ------------------------------------------------------------
+# Frontend
+# ------------------------------------------------------------
+
+frontend:
+  replicaCount: 2
+
+  image:
+    repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
+
+    # Use the same current application build.
+    tag: "COPY_CURRENT_SHA_HERE"
+
+    pullPolicy: IfNotPresent
+
+
+# ------------------------------------------------------------
+# AWS Application Load Balancer
+# ------------------------------------------------------------
+
+ingress:
+  enabled: true
+
+  # Use AWS Load Balancer Controller.
+  className: alb
+
+  # No Route53 DNS name yet.
+  host: ""
+
+  annotations:
+
+    # Create a public ALB.
+    alb.ingress.kubernetes.io/scheme: internet-facing
+
+    # Send ALB traffic directly to Pod IP addresses.
+    alb.ingress.kubernetes.io/target-type: ip
+
+    # Use HTTP for this short-lived demonstration.
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+
+    # Health-check the frontend NGINX endpoint.
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+
+    # Tag the generated ALB for cleanup and cost visibility.
+    alb.ingress.kubernetes.io/tags: Project=cloudops-insight,Environment=dev,Temporary=true
+
+
+# ------------------------------------------------------------
+# Autoscaling
+# ------------------------------------------------------------
+
+autoscaling:
+  enabled: true
+
+  minReplicas: 2
+
+  maxReplicas: 4
+
+  targetCPUUtilizationPercentage: 70
+
+
+# ------------------------------------------------------------
+# Existing runtime Secret
+# ------------------------------------------------------------
+
+secrets:
+  existingSecret: cloudops-secrets

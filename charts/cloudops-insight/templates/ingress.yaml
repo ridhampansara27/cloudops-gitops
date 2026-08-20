@@ -4,26 +4,38 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
+  # Create the CloudOps public application ingress.
   name: cloudops-insight
 
+  {{- with .Values.ingress.annotations }}
+
+  # Render environment-specific ingress-controller configuration.
+  annotations:
+{{ toYaml . | indent 4 }}
+
+  {{- end }}
+
 spec:
-  # Ask ingress-nginx to manage this resource.
+  # Select nginx locally or ALB in EKS.
   ingressClassName: {{ .Values.ingress.className }}
 
   rules:
-    - host: {{ .Values.ingress.host }}
+    -
+      {{- if .Values.ingress.host }}
+
+      # Add a DNS host only when one is configured.
+      host: {{ .Values.ingress.host | quote }}
+
+      {{- end }}
 
       http:
         paths:
-          # Send all browser traffic to frontend NGINX.
-          #
-          # Frontend NGINX then proxies /api requests internally
-          # to cloudops-backend.
           - path: /
             pathType: Prefix
 
             backend:
               service:
+                # Send traffic to frontend NGINX.
                 name: cloudops-frontend
 
                 port:
