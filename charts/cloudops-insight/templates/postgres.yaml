@@ -47,17 +47,35 @@ spec:
             - containerPort: 5432
               name: postgres
 
+                    # Configure environment variables used by the PostgreSQL container.
           env:
+
+            # Tell PostgreSQL which database to create during initialization.
             - name: POSTGRES_DB
+              # Read the database name from the Helm values.
               value: {{ .Values.postgres.database | quote }}
 
+            # Tell PostgreSQL which application database user to create.
             - name: POSTGRES_USER
+              # Read the PostgreSQL username from the Helm values.
               value: {{ .Values.postgres.username | quote }}
 
+            # Store PostgreSQL files inside a subdirectory of the EBS mount.
+            # The root of an ext4 EBS filesystem contains lost+found,
+            # which prevents PostgreSQL initdb from using the mount root directly.
+            - name: PGDATA
+              # PostgreSQL will create its database cluster inside this clean subdirectory.
+              value: /var/lib/postgresql/data/pgdata
+
+            # Supply the PostgreSQL password without storing it in Git.
             - name: POSTGRES_PASSWORD
+              # Read the password from the existing Kubernetes Secret.
               valueFrom:
+                # Reference one key from the Kubernetes Secret.
                 secretKeyRef:
+                  # Use the Secret configured through Helm values.
                   name: {{ .Values.secrets.existingSecret }}
+                  # Read only the PostgreSQL password key.
                   key: POSTGRES_PASSWORD
 
           readinessProbe:
