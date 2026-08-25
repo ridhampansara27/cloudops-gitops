@@ -27,7 +27,7 @@ backend:
 
 frontend:
   # Run two frontend replicas in EKS.
-  replicaCount: 2
+  replicaCount: 1
 
   image:
     # Pull the frontend image from GitHub Container Registry.
@@ -80,7 +80,7 @@ autoscaling:
 
   minReplicas: 2
 
-  maxReplicas: 4
+  maxReplicas: 3
 
   targetCPUUtilizationPercentage: 70
 
