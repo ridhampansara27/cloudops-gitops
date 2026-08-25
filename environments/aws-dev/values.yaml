@@ -65,6 +65,9 @@ ingress:
     # Expose both HTTP and HTTPS.
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
 
+    # Redirect all plain HTTP traffic to HTTPS.
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+
     # Frontend health endpoint.
     alb.ingress.kubernetes.io/healthcheck-path: /healthz
 
