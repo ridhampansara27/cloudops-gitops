@@ -47,27 +47,28 @@ frontend:
 ingress:
   enabled: true
 
-  # Use AWS Load Balancer Controller.
+  # AWS Load Balancer Controller.
   className: alb
 
-  # No Route53 DNS name yet.
-  host: ""
+  # Public DNS hostname for this environment.
+  # The controller can use this hostname to discover the matching ACM certificate.
+  host: "cloudops.ridhampansara.dev"
 
   annotations:
 
-    # Create a public ALB.
+    # Keep the ALB publicly reachable.
     alb.ingress.kubernetes.io/scheme: internet-facing
 
-    # Send ALB traffic directly to Pod IP addresses.
+    # Route directly to Kubernetes Pod IPs.
     alb.ingress.kubernetes.io/target-type: ip
 
-    # Use HTTP for this short-lived demonstration.
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    # Expose both HTTP and HTTPS.
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
 
-    # Health-check the frontend NGINX endpoint.
+    # Frontend health endpoint.
     alb.ingress.kubernetes.io/healthcheck-path: /healthz
 
-    # Tag the generated ALB for cleanup and cost visibility.
+    # Preserve cost/cleanup tags.
     alb.ingress.kubernetes.io/tags: Project=cloudops-insight,Environment=dev,Temporary=true
 
 
