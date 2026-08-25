@@ -52,7 +52,7 @@ ingress:
 
   # Public DNS hostname for this environment.
   # The controller can use this hostname to discover the matching ACM certificate.
-  host: "cloudops.ridhampansara.dev"
+  host: "cloudinsight.ridhampansara.dev"
 
   annotations:
 
