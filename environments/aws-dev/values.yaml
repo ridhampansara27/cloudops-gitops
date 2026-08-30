@@ -8,7 +8,7 @@ environment: dev
 
 backend:
   # Run two backend replicas in EKS.
-  replicaCount: 2
+  replicaCount: 1
 
   image:
     # Pull the backend image from GitHub Container Registry.
@@ -82,9 +82,9 @@ ingress:
 autoscaling:
   enabled: true
 
-  minReplicas: 2
+  minReplicas: 1
 
-  maxReplicas: 3
+  maxReplicas: 2
 
   targetCPUUtilizationPercentage: 70
 

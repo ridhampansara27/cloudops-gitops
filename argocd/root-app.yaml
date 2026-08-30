@@ -20,7 +20,12 @@ spec:
     path: argocd/applications
 
     directory:
-      recurse: true
+    # Discover child Argo CD applications.
+    recurse: true
+
+    # cloudops-dev is for the local development cluster.
+    # EKS must use cloudops-aws-dev instead.
+    exclude: cloudops-dev.yaml
 
   destination:
     # Child Application CRs are created in the Argo cluster.
