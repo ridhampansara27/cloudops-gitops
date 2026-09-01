@@ -12,9 +12,9 @@ backend:
   image:
     # Start using the Kind-loaded local image.
     # GitHub Actions will replace this after the first GHCR deployment.
-    repository: "ghcr.io/ridhampansara27/cloudops-insight-backend" # backend-image-repository
+    repository: "ghcr.io/ridhampansara27/cloudops-insight-backend"
 
-    tag: "sha-340cbacd128a114f9c4592e95de6153c3c101198" # backend-image-tag
+    tag: "sha-7f2e5d6486deff62865ff74715f910e869e5e229"
 
     pullPolicy: IfNotPresent
 
@@ -27,9 +27,9 @@ frontend:
   replicaCount: 2
 
   image:
-    repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend" # frontend-image-repository
+    repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
 
-    tag: "sha-340cbacd128a114f9c4592e95de6153c3c101198" # frontend-image-tag
+    tag: "sha-7f2e5d6486deff62865ff74715f910e869e5e229"
 
     pullPolicy: IfNotPresent
 
