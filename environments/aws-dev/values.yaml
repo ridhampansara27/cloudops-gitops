@@ -45,7 +45,7 @@ frontend:
 # ------------------------------------------------------------
 
 ingress:
-  enabled: true
+  enabled: false
 
   # AWS Load Balancer Controller.
   className: alb
