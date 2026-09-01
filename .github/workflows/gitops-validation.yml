@@ -1,0 +1,273 @@
+name: GitOps Validation
+
+# ------------------------------------------------------------
+# Validate GitOps desired state before it can reach main.
+# ------------------------------------------------------------
+
+on:
+  pull_request:
+
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+
+permissions:
+  contents: read
+
+
+jobs:
+
+  validate:
+    name: GitOps validation
+
+    runs-on: ubuntu-24.04
+
+    steps:
+
+      # Checkout the GitOps repository.
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+
+      # ------------------------------------------------------
+      # YAML validation
+      # ------------------------------------------------------
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+
+        with:
+          python-version: "3.13"
+
+
+      - name: Install YAML parser
+        run: |
+          python -m pip install \
+            --disable-pip-version-check \
+            --no-cache-dir \
+            PyYAML==6.0.2
+
+
+      # Parse every static YAML document in the repository.
+      #
+      # Helm templates are intentionally excluded because they contain
+      # Go-template expressions and are validated by Helm later.
+      - name: Validate static YAML
+        shell: bash
+
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import sys
+          import yaml
+
+
+          yaml_files = []
+
+          for path in Path(".").rglob("*"):
+              if not path.is_file():
+                  continue
+
+              if path.suffix.lower() not in {".yaml", ".yml"}:
+                  continue
+
+              # Raw Helm templates are not valid YAML until rendered.
+              if (
+                  "charts" in path.parts
+                  and "templates" in path.parts
+              ):
+                  continue
+
+              yaml_files.append(path)
+
+
+          if not yaml_files:
+              print("No YAML files found.")
+              sys.exit(1)
+
+
+          failed = False
+
+          for path in sorted(yaml_files):
+              try:
+                  with path.open(
+                      "r",
+                      encoding="utf-8-sig",
+                  ) as stream:
+                      documents = list(
+                          yaml.safe_load_all(stream)
+                      )
+
+                  print(
+                      f"OK: {path} "
+                      f"({len(documents)} document(s))"
+                  )
+
+              except yaml.YAMLError as error:
+                  failed = True
+
+                  print(
+                      f"ERROR: invalid YAML in {path}",
+                      file=sys.stderr,
+                  )
+
+                  print(
+                      error,
+                      file=sys.stderr,
+                  )
+
+
+          if failed:
+              sys.exit(1)
+
+          print(
+              f"Validated {len(yaml_files)} "
+              "static YAML file(s)."
+          )
+          PY
+
+
+      # ------------------------------------------------------
+      # Helm validation
+      # ------------------------------------------------------
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+
+      # First validate the chart using its default values.
+      - name: Lint Helm chart defaults
+        run: |
+          helm lint \
+            charts/cloudops-insight
+
+
+      # Validate every environment overlay against the same chart.
+      - name: Lint all environment overlays
+        shell: bash
+
+        run: |
+          set -euo pipefail
+
+          environments=(
+            dev
+            aws-dev
+            stage
+            prod
+          )
+
+          for environment in "${environments[@]}"; do
+
+            values_file="environments/${environment}/values.yaml"
+
+            echo
+            echo "=========================================="
+            echo "Helm lint: ${environment}"
+            echo "Values: ${values_file}"
+            echo "=========================================="
+
+            test -f "${values_file}"
+
+            helm lint \
+              charts/cloudops-insight \
+              --values "${values_file}"
+
+          done
+
+
+      # Render each environment exactly as Helm would render it.
+      #
+      # This catches missing values, invalid template expressions,
+      # malformed generated YAML, and many chart integration errors.
+      - name: Render all environment manifests
+        shell: bash
+
+        run: |
+          set -euo pipefail
+
+          mkdir -p /tmp/cloudops-rendered
+
+          environments=(
+            dev
+            aws-dev
+            stage
+            prod
+          )
+
+          for environment in "${environments[@]}"; do
+
+            echo
+            echo "=========================================="
+            echo "Helm render: ${environment}"
+            echo "=========================================="
+
+            helm template \
+              "cloudops-${environment}" \
+              charts/cloudops-insight \
+              --namespace cloudops \
+              --values "environments/${environment}/values.yaml" \
+              > "/tmp/cloudops-rendered/${environment}.yaml"
+
+          done
+
+
+      # Parse the final Helm-rendered output again as YAML.
+      #
+      # This verifies what Kubernetes/Argo CD would actually receive,
+      # instead of validating only the source templates.
+      - name: Validate rendered manifests
+        shell: bash
+
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import sys
+          import yaml
+
+
+          rendered_directory = Path(
+              "/tmp/cloudops-rendered"
+          )
+
+          failed = False
+
+          for path in sorted(
+              rendered_directory.glob("*.yaml")
+          ):
+              try:
+                  with path.open(
+                      "r",
+                      encoding="utf-8",
+                  ) as stream:
+                      documents = [
+                          document
+                          for document
+                          in yaml.safe_load_all(stream)
+                          if document is not None
+                      ]
+
+                  if not documents:
+                      raise ValueError(
+                          "Helm rendered no Kubernetes resources."
+                      )
+
+                  print(
+                      f"OK: {path.name} "
+                      f"({len(documents)} resources)"
+                  )
+
+              except Exception as error:
+                  failed = True
+
+                  print(
+                      f"ERROR: {path.name}: {error}",
+                      file=sys.stderr,
+                  )
+
+
+          if failed:
+              sys.exit(1)
+          PY
