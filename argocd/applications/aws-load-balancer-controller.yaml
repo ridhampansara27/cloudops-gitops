@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  # Manage the AWS Load Balancer Controller through Argo CD.
+  name: aws-load-balancer-controller
+
+  # Application resources belong in the Argo CD namespace.
+  namespace: argocd
+
+spec:
+  # Use the default Argo CD project.
+  project: default
+
+  source:
+    # Official AWS EKS Helm chart repository.
+    repoURL: https://aws.github.io/eks-charts
+
+    # Install the AWS Load Balancer Controller chart.
+    chart: aws-load-balancer-controller
+
+    # Pin the chart that deploys controller v2.14.1.
+    targetRevision: "1.14.1"
+
+    helm:
+      # Keep the Helm release name predictable.
+      releaseName: aws-load-balancer-controller
+
+      values: |
+        # EKS cluster managed by this controller.
+        clusterName: cloudops-dev
+
+        # AWS region containing the EKS cluster.
+        region: eu-central-1
+
+        # Explicit VPC avoids controller metadata discovery.
+        vpcId: vpc-08b5fe72a2dabc89e
+
+        # One replica is sufficient for the single-node dev environment.
+        replicaCount: 1
+
+        # This exact ServiceAccount is already associated with
+        # the Terraform-managed EKS Pod Identity association.
+        serviceAccount:
+          create: true
+          name: aws-load-balancer-controller
+
+  destination:
+    # Deploy into the same EKS cluster as Argo CD.
+    server: https://kubernetes.default.svc
+
+    # AWS Load Balancer Controller belongs in kube-system.
+    namespace: kube-system
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+
+    syncOptions:
+      - CreateNamespace=true
+
+    retry:
+      limit: 5
+
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 2m
