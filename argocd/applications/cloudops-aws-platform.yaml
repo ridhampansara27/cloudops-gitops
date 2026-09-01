@@ -1,0 +1,71 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  # Manage AWS-specific Kubernetes platform resources separately
+  # from the main CloudOps Helm release.
+  name: cloudops-aws-platform
+
+  # Child Application resources belong in the Argo CD namespace.
+  namespace: argocd
+
+spec:
+  # Use the default Argo CD project.
+  project: default
+
+  source:
+    # GitOps repository is the source of truth.
+    repoURL: https://github.com/ridhampansara27/cloudops-gitops.git
+
+    # Deploy the configuration committed to main.
+    targetRevision: main
+
+    # This directory contains:
+    # - gp3 StorageClass
+    # - AWS SecretStore
+    # - CloudOps ExternalSecret
+    path: kubernetes/aws
+
+  destination:
+    # Deploy to the same EKS cluster where Argo CD is running.
+    server: https://kubernetes.default.svc
+
+    # Namespace-scoped AWS secret resources belong to CloudOps.
+    # Cluster-scoped resources such as StorageClass are still
+    # handled correctly by Argo CD.
+    namespace: cloudops
+
+  syncPolicy:
+    automated:
+      # Reconcile Git automatically.
+      enabled: true
+
+      # Delete resources removed from Git.
+      prune: true
+
+      # Repair Kubernetes drift.
+      selfHeal: true
+
+      # Prevent accidental deletion from an empty source directory.
+      allowEmpty: false
+
+    syncOptions:
+      # Create the CloudOps namespace when necessary.
+      - CreateNamespace=true
+
+      # Delete obsolete resources after new resources are synchronized.
+      - PruneLast=true
+
+      # External Secrets CRDs may still be installing during the first
+      # bootstrap reconciliation.
+      - SkipDryRunOnMissingResource=true
+
+    # Retry bootstrap synchronization while External Secrets CRDs
+    # become available.
+    retry:
+      limit: 10
+
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
