@@ -15,7 +15,7 @@ backend:
     repository: "ghcr.io/ridhampansara27/cloudops-insight-backend"
 
     # Use the existing immutable application image.
-    tag: "sha-8ea7aa3c21dc9db14fdb3ca60ca9d5bb99464759"
+    tag: "sha-b445618597ac069bc4036d50e764cdd7630824b1"
 
     # Reuse the locally cached image when available.
     pullPolicy: IfNotPresent
@@ -34,7 +34,7 @@ frontend:
     repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
 
     # Use the same immutable application build currently used by dev.
-    tag: "sha-8ea7aa3c21dc9db14fdb3ca60ca9d5bb99464759"
+    tag: "sha-b445618597ac069bc4036d50e764cdd7630824b1"
 
     # Reuse the locally cached image when available.
     pullPolicy: IfNotPresent
