@@ -100,7 +100,9 @@ postgres:
   storage:
     size: 2Gi
 
-
+    # Leave empty to use the cluster default StorageClass.
+    # Cloud-specific environments can select one explicitly.
+    storageClassName: ""
 # ------------------------------------------------------------
 # Redis — local Kind only
 # ------------------------------------------------------------
@@ -141,3 +143,36 @@ autoscaling:
   maxReplicas: 5
 
   targetCPUUtilizationPercentage: 70
+
+# ------------------------------------------------------------
+# Kubernetes ServiceAccount
+# ------------------------------------------------------------
+
+serviceAccount:
+  # Create the application ServiceAccount through this chart.
+  create: true
+
+  # Preserve the existing AWS name by default so current
+  # aws-dev rendering remains backward-compatible.
+  name: cloudops-aws
+
+
+# ------------------------------------------------------------
+# Pod disruption budgets
+# ------------------------------------------------------------
+
+podDisruptionBudget:
+  # Preserve the current behavior by default.
+  enabled: true
+
+
+# ------------------------------------------------------------
+# Kubernetes NetworkPolicy
+# ------------------------------------------------------------
+
+networkPolicy:
+  # Preserve the existing manifest by default.
+  #
+  # A compatible CNI/network-policy engine is still required
+  # for Kubernetes to actually enforce NetworkPolicy objects.
+  enabled: true
