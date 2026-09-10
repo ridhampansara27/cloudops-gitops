@@ -1,0 +1,60 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  # CloudOps runtime hosted on Oracle Kubernetes Engine.
+  name: cloudops-oci-dev
+  namespace: argocd
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/ridhampansara27/cloudops-gitops.git
+
+    # OCI follows the reviewed GitOps main branch.
+    targetRevision: main
+
+    path: charts/cloudops-insight
+
+    helm:
+      releaseName: cloudops
+
+      valueFiles:
+        - ../../environments/oci-dev/values.yaml
+
+  destination:
+    # Argo CD runs inside the target OKE cluster.
+    server: https://kubernetes.default.svc
+    namespace: cloudops
+
+  # IMPORTANT:
+  # No automated sync policy yet.
+  #
+  # The Application may be discovered by the OCI root application,
+  # but CloudOps resources are not created until we explicitly sync
+  # after secrets, storage and migration prerequisites are validated.
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+
+    retry:
+      limit: 5
+
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Keep Argo CD from fighting the HPA if autoscaling is enabled
+  # again in a future OCI configuration.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: cloudops-backend
+
+      jsonPointers:
+        - /spec/replicas
