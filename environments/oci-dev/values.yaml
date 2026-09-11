@@ -77,6 +77,18 @@ secrets:
 
 
 # ------------------------------------------------------------
+# AWS bootstrap identity
+# ------------------------------------------------------------
+
+awsBootstrap:
+  # OCI cannot use EKS Pod Identity.
+  # Supply only the minimal bootstrap credentials required
+  # to assume the configured AWS read-only discovery role.
+  enabled: true
+  existingSecret: cloudops-aws-bootstrap
+
+
+# ------------------------------------------------------------
 # OCI workload identity
 # ------------------------------------------------------------
 

@@ -38,6 +38,20 @@ spec:
                 name: cloudops-config
 
           env:
+            {{ if .Values.awsBootstrap.enabled }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.awsBootstrap.existingSecret }}
+                  key: AWS_ACCESS_KEY_ID
+
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.awsBootstrap.existingSecret }}
+                  key: AWS_SECRET_ACCESS_KEY
+            {{ end }}
+
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
