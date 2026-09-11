@@ -44,7 +44,7 @@ beat:
 # ------------------------------------------------------------
 
 postgres:
-  image: "postgres:17-alpine"
+  image: "docker.io/library/postgres:17-alpine"
 
   database: cloudops
   username: cloudops
@@ -63,7 +63,7 @@ postgres:
 
 redis:
   # Redis remains ephemeral in OCI.
-  image: "redis:7-alpine"
+  image: "docker.io/library/redis:7-alpine"
 
 
 # ------------------------------------------------------------
