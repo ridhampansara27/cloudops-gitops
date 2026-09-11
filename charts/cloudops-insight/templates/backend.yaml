@@ -17,7 +17,7 @@ spec:
         app: cloudops-backend
 
     spec:
-      serviceAccountName: cloudops-aws
+      serviceAccountName: {{ .Values.serviceAccount.name }}
       containers:
         - name: backend
 

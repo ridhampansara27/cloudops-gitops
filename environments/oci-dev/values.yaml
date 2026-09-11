@@ -1,0 +1,127 @@
+# CloudOps Insight OCI development environment.
+environment: oci-dev
+
+
+# ------------------------------------------------------------
+# Backend
+# ------------------------------------------------------------
+
+backend:
+  replicaCount: 1
+
+  image:
+    repository: "ghcr.io/ridhampansara27/cloudops-insight-backend"
+    tag: "sha-14907cf14e1e2fdf3e7539d10e0475b7314b48eb"
+    pullPolicy: IfNotPresent
+
+
+# ------------------------------------------------------------
+# Frontend
+# ------------------------------------------------------------
+
+frontend:
+  replicaCount: 1
+
+  image:
+    repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
+    tag: "sha-14907cf14e1e2fdf3e7539d10e0475b7314b48eb"
+    pullPolicy: IfNotPresent
+
+
+# ------------------------------------------------------------
+# Celery
+# ------------------------------------------------------------
+
+worker:
+  replicaCount: 1
+
+beat:
+  replicaCount: 1
+
+
+# ------------------------------------------------------------
+# OCI PostgreSQL storage
+# ------------------------------------------------------------
+
+postgres:
+  image: "postgres:17-alpine"
+
+  database: cloudops
+  username: cloudops
+
+  storage:
+    # OCI Block Volume CSI provisions a minimum 50 GiB volume.
+    # Request the real allocation explicitly rather than 2 GiB.
+    size: 50Gi
+
+    storageClassName: "oci-bv"
+
+
+# ------------------------------------------------------------
+# Redis
+# ------------------------------------------------------------
+
+redis:
+  # Redis remains ephemeral in OCI.
+  image: "redis:7-alpine"
+
+
+# ------------------------------------------------------------
+# Runtime Secret
+# ------------------------------------------------------------
+
+secrets:
+  # This Secret will be created separately before application sync.
+  # No secret material is stored in Git.
+  existingSecret: cloudops-secrets
+
+
+# ------------------------------------------------------------
+# OCI workload identity
+# ------------------------------------------------------------
+
+serviceAccount:
+  create: true
+
+  # Do not reuse the AWS-specific ServiceAccount name.
+  name: cloudops-runtime
+
+
+# ------------------------------------------------------------
+# Public routing
+# ------------------------------------------------------------
+
+ingress:
+  # Cloudflare Tunnel will route directly to the frontend ClusterIP.
+  # No OCI Load Balancer, NodePort or ingress controller is required.
+  enabled: false
+
+
+# ------------------------------------------------------------
+# Autoscaling
+# ------------------------------------------------------------
+
+autoscaling:
+  # One fixed backend replica is intentional on the single A1 worker.
+  enabled: false
+
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 70
+
+
+# ------------------------------------------------------------
+# Single-node cluster behavior
+# ------------------------------------------------------------
+
+podDisruptionBudget:
+  # A minAvailable=1 PDB can obstruct voluntary maintenance
+  # when the cluster contains only one worker.
+  enabled: false
+
+
+networkPolicy:
+  # OKE currently uses Flannel Overlay.
+  # Do not claim NetworkPolicy enforcement until a policy-capable
+  # networking implementation is intentionally installed.
+  enabled: false
