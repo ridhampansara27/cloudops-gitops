@@ -118,6 +118,17 @@ redis:
 secrets:
   existingSecret: cloudops-secrets
 
+# ------------------------------------------------------------
+# Optional external-cloud bootstrap credentials
+# ------------------------------------------------------------
+
+awsBootstrap:
+  # AWS/EKS continues using Pod Identity by default.
+  enabled: false
+
+  # Cloud-specific environments may provide this Secret.
+  existingSecret: cloudops-aws-bootstrap
+
 
 # ------------------------------------------------------------
 # Ingress
