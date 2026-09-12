@@ -1,0 +1,86 @@
+{{- if .Values.cloudflared.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: cloudops-cloudflared
+
+  labels:
+    app: cloudops-cloudflared
+
+spec:
+  replicas: {{ .Values.cloudflared.replicaCount }}
+
+  selector:
+    matchLabels:
+      app: cloudops-cloudflared
+
+  template:
+    metadata:
+      labels:
+        app: cloudops-cloudflared
+
+    spec:
+      # cloudflared does not need Kubernetes API credentials.
+      automountServiceAccountToken: false
+
+      {{- with .Values.cloudflared.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      containers:
+        - name: cloudflared
+
+          image: "{{ .Values.cloudflared.image.repository }}:{{ .Values.cloudflared.image.tag }}"
+          imagePullPolicy: {{ .Values.cloudflared.image.pullPolicy }}
+
+          # Keep the remotely-managed Tunnel token outside Git.
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.cloudflared.existingSecret }}
+                  key: token
+
+          command:
+            - cloudflared
+            - tunnel
+            - --no-autoupdate
+            - --loglevel
+            - info
+            - --metrics
+            - "0.0.0.0:{{ .Values.cloudflared.metricsPort }}"
+            - run
+
+          resources:
+            {{- toYaml .Values.cloudflared.resources | nindent 12 }}
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.cloudflared.metricsPort }}
+
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 6
+
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.cloudflared.metricsPort }}
+
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+
+          securityContext:
+            allowPrivilegeEscalation: false
+
+            capabilities:
+              drop:
+                - ALL
+
+            seccompProfile:
+              type: RuntimeDefault
+{{- end }}
