@@ -187,3 +187,37 @@ networkPolicy:
   # A compatible CNI/network-policy engine is still required
   # for Kubernetes to actually enforce NetworkPolicy objects.
   enabled: true
+
+
+# ------------------------------------------------------------
+# Cloudflare Tunnel connector
+# ------------------------------------------------------------
+
+cloudflared:
+  # Disabled by default so existing local/AWS environments
+  # remain completely unchanged.
+  enabled: false
+
+  replicaCount: 1
+
+  image:
+    repository: "docker.io/cloudflare/cloudflared"
+    tag: "2026.9.0"
+    pullPolicy: IfNotPresent
+
+  # Tunnel credential is provisioned externally.
+  # No Cloudflare token is stored in Git.
+  existingSecret: cloudflared-tunnel-token
+
+  metricsPort: 2000
+
+  resources:
+    requests:
+      cpu: 20m
+      memory: 32Mi
+
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+  nodeSelector: {}

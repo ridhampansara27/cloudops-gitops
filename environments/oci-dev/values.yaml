@@ -137,3 +137,18 @@ networkPolicy:
   # Do not claim NetworkPolicy enforcement until a policy-capable
   # networking implementation is intentionally installed.
   enabled: false
+
+# ------------------------------------------------------------
+# Cloudflare Tunnel connector
+# ------------------------------------------------------------
+
+cloudflared:
+  enabled: true
+
+  replicaCount: 1
+
+  # Credential remains an externally provisioned Kubernetes Secret.
+  existingSecret: cloudflared-tunnel-token
+
+  nodeSelector:
+    kubernetes.io/arch: arm64

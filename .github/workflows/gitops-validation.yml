@@ -155,6 +155,7 @@ jobs:
           environments=(
             dev
             aws-dev
+            oci-dev
             stage
             prod
           )
@@ -193,6 +194,7 @@ jobs:
           environments=(
             dev
             aws-dev
+            oci-dev
             stage
             prod
           )
