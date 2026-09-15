@@ -33,7 +33,7 @@ backend:
 
   image:
     repository: "ghcr.io/ridhampansara27/cloudops-insight-backend"
-    tag: "sha-14907cf14e1e2fdf3e7539d10e0475b7314b48eb"
+    tag: "sha-1c64aa5f9089d7a87a7dc87b11ca437b8391c843"
     pullPolicy: IfNotPresent
 
 
@@ -46,7 +46,7 @@ frontend:
 
   image:
     repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
-    tag: "sha-14907cf14e1e2fdf3e7539d10e0475b7314b48eb"
+    tag: "sha-1c64aa5f9089d7a87a7dc87b11ca437b8391c843"
     pullPolicy: IfNotPresent
 
 
