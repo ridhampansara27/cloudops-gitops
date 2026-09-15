@@ -40,5 +40,22 @@ data:
 
   AWS_ROLE_DURATION_SECONDS: "3600"
 
-  # Allow local web development if required.
-  CORS_ORIGINS: "http://localhost:5173,http://localhost:8080,http://cloudops.local"
+  # Configure the canonical frontend origin used by authentication emails
+  # and other generated browser links.
+  FRONTEND_BASE_URL: {{ .Values.runtime.frontendBaseUrl | quote }}
+
+  # Restrict browser API access to explicitly configured origins.
+  CORS_ORIGINS: {{ .Values.runtime.corsOrigins | quote }}
+
+  # Keep commercial self-service registration fail-closed unless an
+  # environment explicitly enables it.
+  PUBLIC_SIGNUP_ENABLED: {{ .Values.runtime.publicSignupEnabled | quote }}
+
+  # Configure the rotating refresh-session cookie.
+  REFRESH_COOKIE_SECURE: {{ .Values.runtime.refreshCookie.secure | quote }}
+
+  REFRESH_COOKIE_SAMESITE: {{ .Values.runtime.refreshCookie.sameSite | quote }}
+
+  REFRESH_COOKIE_PATH: {{ .Values.runtime.refreshCookie.path | quote }}
+
+  REFRESH_COOKIE_DOMAIN: {{ .Values.runtime.refreshCookie.domain | quote }}

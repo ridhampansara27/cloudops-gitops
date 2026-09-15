@@ -3,6 +3,28 @@ environment: oci-dev
 
 
 # ------------------------------------------------------------
+# Commercial browser runtime
+# ------------------------------------------------------------
+
+runtime:
+  # Keep the existing hostname canonical until commercial cutover.
+  frontendBaseUrl: "https://cloudinsight.ridhampansara.dev"
+
+  # Allow both public hostnames during the controlled migration.
+  corsOrigins: "https://cloudinsight.ridhampansara.dev,https://app.cloudopsinsight.tech"
+
+  # Public registration remains intentionally disabled.
+  publicSignupEnabled: false
+
+  # Browser refresh sessions must use a host-only HTTPS cookie.
+  refreshCookie:
+    secure: true
+    sameSite: "lax"
+    path: "/api/v1/auth"
+    domain: ""
+
+
+# ------------------------------------------------------------
 # Backend
 # ------------------------------------------------------------
 

@@ -3,6 +3,28 @@ environment: dev
 
 
 # ------------------------------------------------------------
+# Application runtime
+# ------------------------------------------------------------
+
+runtime:
+  # Canonical browser origin used for generated application links.
+  frontendBaseUrl: "http://cloudops.local"
+
+  # Browser origins permitted to call the API.
+  corsOrigins: "http://localhost:5173,http://localhost:8080,http://cloudops.local"
+
+  # Commercial self-service signup remains fail-closed by default.
+  publicSignupEnabled: false
+
+  # Rotating refresh-session cookie configuration.
+  refreshCookie:
+    secure: false
+    sameSite: "lax"
+    path: "/api/v1/auth"
+    domain: ""
+
+
+# ------------------------------------------------------------
 # Backend
 # ------------------------------------------------------------
 
