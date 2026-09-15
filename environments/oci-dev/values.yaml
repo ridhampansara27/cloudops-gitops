@@ -1,5 +1,5 @@
 # CloudOps Insight OCI development environment.
-environment: oci-dev
+environment: staging
 
 
 # ------------------------------------------------------------
