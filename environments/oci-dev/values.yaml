@@ -1,5 +1,5 @@
 # CloudOps Insight OCI development environment.
-environment: staging
+environment: oci-dev
 
 
 # ------------------------------------------------------------
@@ -7,6 +7,9 @@ environment: staging
 # ------------------------------------------------------------
 
 runtime:
+  # Application lifecycle identity is independent from OCI naming.
+  appEnv: staging
+
   # Keep the existing hostname canonical until commercial cutover.
   frontendBaseUrl: "https://cloudinsight.ridhampansara.dev"
 

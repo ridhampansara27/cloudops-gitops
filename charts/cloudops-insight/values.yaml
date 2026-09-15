@@ -7,6 +7,10 @@ environment: dev
 # ------------------------------------------------------------
 
 runtime:
+  # Semantic application lifecycle environment.
+  # Infrastructure-specific names such as oci-dev must not be used here.
+  appEnv: development
+
   # Canonical browser origin used for generated application links.
   frontendBaseUrl: "http://cloudops.local"
 
