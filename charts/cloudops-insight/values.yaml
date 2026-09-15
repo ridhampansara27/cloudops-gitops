@@ -16,12 +16,26 @@ runtime:
   # Commercial self-service signup remains fail-closed by default.
   publicSignupEnabled: false
 
+  # Authentication email delivery.
+  smtp:
+    host: ""
+    port: 587
+    fromEmail: "no-reply@example.com"
+    fromName: "CloudOps Insight"
+    starttls: true
+    timeoutSeconds: 10
+
   # Rotating refresh-session cookie configuration.
   refreshCookie:
     secure: false
     sameSite: "lax"
     path: "/api/v1/auth"
     domain: ""
+
+  # Distributed authentication abuse protection.
+  rateLimit:
+    enabled: true
+    trustCloudflareConnectingIp: false
 
 
 # ------------------------------------------------------------

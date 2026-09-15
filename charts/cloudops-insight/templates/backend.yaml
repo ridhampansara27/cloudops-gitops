@@ -34,6 +34,9 @@ spec:
                 name: cloudops-config
 
           env:
+            - name: APP_COMPONENT
+              value: "api"
+
             {{ if .Values.awsBootstrap.enabled }}
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -59,6 +62,27 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secrets.existingSecret }}
                   key: JWT_SECRET
+
+            - name: AUTH_TOKEN_PEPPER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: AUTH_TOKEN_PEPPER
+                  optional: true
+
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: SMTP_USERNAME
+                  optional: true
+
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: SMTP_PASSWORD
+                  optional: true
 
             - name: SEED_ADMIN_PASSWORD
               valueFrom:

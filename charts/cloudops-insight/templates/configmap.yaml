@@ -51,6 +51,19 @@ data:
   # environment explicitly enables it.
   PUBLIC_SIGNUP_ENABLED: {{ .Values.runtime.publicSignupEnabled | quote }}
 
+  # Configure authentication email delivery.
+  SMTP_HOST: {{ .Values.runtime.smtp.host | quote }}
+
+  SMTP_PORT: {{ .Values.runtime.smtp.port | quote }}
+
+  SMTP_FROM_EMAIL: {{ .Values.runtime.smtp.fromEmail | quote }}
+
+  SMTP_FROM_NAME: {{ .Values.runtime.smtp.fromName | quote }}
+
+  SMTP_STARTTLS: {{ .Values.runtime.smtp.starttls | quote }}
+
+  SMTP_TIMEOUT_SECONDS: {{ .Values.runtime.smtp.timeoutSeconds | quote }}
+
   # Configure the rotating refresh-session cookie.
   REFRESH_COOKIE_SECURE: {{ .Values.runtime.refreshCookie.secure | quote }}
 
@@ -59,3 +72,8 @@ data:
   REFRESH_COOKIE_PATH: {{ .Values.runtime.refreshCookie.path | quote }}
 
   REFRESH_COOKIE_DOMAIN: {{ .Values.runtime.refreshCookie.domain | quote }}
+
+  # Configure distributed authentication abuse protection.
+  RATE_LIMIT_ENABLED: {{ .Values.runtime.rateLimit.enabled | quote }}
+
+  RATE_LIMIT_TRUST_CLOUDFLARE_CONNECTING_IP: {{ .Values.runtime.rateLimit.trustCloudflareConnectingIp | quote }}

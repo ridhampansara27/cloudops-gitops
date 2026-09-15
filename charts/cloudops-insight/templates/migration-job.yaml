@@ -42,6 +42,9 @@ spec:
                 name: cloudops-config
 
           env:
+            - name: APP_COMPONENT
+              value: "migration"
+
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
