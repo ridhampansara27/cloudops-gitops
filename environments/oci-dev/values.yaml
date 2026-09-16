@@ -10,11 +10,11 @@ runtime:
   # Application lifecycle identity is independent from OCI naming.
   appEnv: staging
 
-  # Keep the existing hostname canonical until commercial cutover.
-  frontendBaseUrl: "https://cloudinsight.ridhampansara.dev"
+  # Use the branded apex hostname as the canonical application URL.
+  frontendBaseUrl: "https://cloudopsinsight.tech"
 
-  # Allow both public hostnames during the controlled migration.
-  corsOrigins: "https://cloudinsight.ridhampansara.dev,https://app.cloudopsinsight.tech"
+  # Allow the canonical apex plus temporary migration hostnames during cutover.
+  corsOrigins: "https://cloudopsinsight.tech,https://app.cloudopsinsight.tech,https://cloudinsight.ridhampansara.dev"
 
   # Public registration remains intentionally disabled.
   publicSignupEnabled: false
