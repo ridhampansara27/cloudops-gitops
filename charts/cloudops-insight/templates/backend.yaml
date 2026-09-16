@@ -87,11 +87,6 @@ spec:
                   key: SMTP_PASSWORD
                   optional: true
 
-            - name: SEED_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.secrets.existingSecret }}
-                  key: SEED_ADMIN_PASSWORD
 
           startupProbe:
             httpGet:
