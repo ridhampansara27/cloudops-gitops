@@ -3,6 +3,46 @@ environment: dev
 
 
 # ------------------------------------------------------------
+# Application runtime
+# ------------------------------------------------------------
+
+runtime:
+  # Semantic application lifecycle environment.
+  # Infrastructure-specific names such as oci-dev must not be used here.
+  appEnv: development
+
+  # Canonical browser origin used for generated application links.
+  frontendBaseUrl: "http://cloudops.local"
+
+  # Browser origins permitted to call the API.
+  corsOrigins: "http://localhost:5173,http://localhost:8080,http://cloudops.local"
+
+  # Commercial self-service signup remains fail-closed by default.
+  publicSignupEnabled: false
+
+  # Authentication email delivery.
+  smtp:
+    host: ""
+    port: 587
+    fromEmail: "no-reply@example.com"
+    fromName: "CloudOps Insight"
+    starttls: true
+    timeoutSeconds: 10
+
+  # Rotating refresh-session cookie configuration.
+  refreshCookie:
+    secure: false
+    sameSite: "lax"
+    path: "/api/v1/auth"
+    domain: ""
+
+  # Distributed authentication abuse protection.
+  rateLimit:
+    enabled: true
+    trustCloudflareConnectingIp: false
+
+
+# ------------------------------------------------------------
 # Backend
 # ------------------------------------------------------------
 

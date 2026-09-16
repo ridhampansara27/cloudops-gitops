@@ -1,5 +1,9 @@
 environment: production
 
+runtime:
+  # Semantic application lifecycle environment.
+  appEnv: production
+
 backend:
   replicaCount: 3
 

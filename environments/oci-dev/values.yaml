@@ -3,6 +3,45 @@ environment: oci-dev
 
 
 # ------------------------------------------------------------
+# Commercial browser runtime
+# ------------------------------------------------------------
+
+runtime:
+  # Application lifecycle identity is independent from OCI naming.
+  appEnv: staging
+
+  # Keep the existing hostname canonical until commercial cutover.
+  frontendBaseUrl: "https://cloudinsight.ridhampansara.dev"
+
+  # Allow both public hostnames during the controlled migration.
+  corsOrigins: "https://cloudinsight.ridhampansara.dev,https://app.cloudopsinsight.tech"
+
+  # Public registration remains intentionally disabled.
+  publicSignupEnabled: false
+
+  # Transactional authentication email delivery.
+  smtp:
+    host: "smtp.resend.com"
+    port: 587
+    fromEmail: "no-reply@notify.cloudopsinsight.tech"
+    fromName: "CloudOps Insight"
+    starttls: true
+    timeoutSeconds: 10
+
+  # Browser refresh sessions must use a host-only HTTPS cookie.
+  refreshCookie:
+    secure: true
+    sameSite: "lax"
+    path: "/api/v1/auth"
+    domain: ""
+
+  # OKE public traffic reaches the frontend through Cloudflare Tunnel.
+  rateLimit:
+    enabled: true
+    trustCloudflareConnectingIp: true
+
+
+# ------------------------------------------------------------
 # Backend
 # ------------------------------------------------------------
 
@@ -11,7 +50,7 @@ backend:
 
   image:
     repository: "ghcr.io/ridhampansara27/cloudops-insight-backend"
-    tag: "sha-14907cf14e1e2fdf3e7539d10e0475b7314b48eb"
+    tag: "sha-1c64aa5f9089d7a87a7dc87b11ca437b8391c843"
     pullPolicy: IfNotPresent
 
 
@@ -24,7 +63,7 @@ frontend:
 
   image:
     repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
-    tag: "sha-14907cf14e1e2fdf3e7539d10e0475b7314b48eb"
+    tag: "sha-1c64aa5f9089d7a87a7dc87b11ca437b8391c843"
     pullPolicy: IfNotPresent
 
 

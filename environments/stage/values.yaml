@@ -1,5 +1,9 @@
 environment: stage
 
+runtime:
+  # Semantic application lifecycle environment.
+  appEnv: staging
+
 backend:
   replicaCount: 2
 

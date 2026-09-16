@@ -38,6 +38,9 @@ spec:
                 name: cloudops-config
 
           env:
+            - name: APP_COMPONENT
+              value: "worker"
+
             {{ if .Values.awsBootstrap.enabled }}
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -109,6 +112,8 @@ spec:
                 name: cloudops-config
 
           env:
+            - name: APP_COMPONENT
+              value: "beat"
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
