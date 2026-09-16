@@ -13,8 +13,8 @@ runtime:
   # Use the branded apex hostname as the canonical application URL.
   frontendBaseUrl: "https://cloudopsinsight.tech"
 
-  # Allow the canonical apex plus temporary migration hostnames during cutover.
-  corsOrigins: "https://cloudopsinsight.tech,https://app.cloudopsinsight.tech,https://cloudinsight.ridhampansara.dev"
+  # Allow only the canonical production origin.
+  corsOrigins: "https://cloudopsinsight.tech"
 
   # Public registration remains intentionally disabled.
   publicSignupEnabled: false
