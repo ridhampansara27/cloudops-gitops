@@ -197,6 +197,26 @@ cloudflared:
 # ------------------------------------------------------------
 
 postgresBackup:
+  # Deploy the backup workload in OCI.
+  enabled: true
+
+  # Final intended production schedule: 02:15 UTC daily.
+  schedule: "15 2 * * *"
+  timeZone: "Etc/UTC"
+
+  # Fail closed for the first deployment.
+  #
+  # We will unsuspend only after reviewing the rendered workload.
+  suspend: true
+
+  serviceAccountName: cloudops-postgres-backup
+
+  databaseHost: cloudops-postgres
+  databasePort: 5432
+
+  # Must exactly match the scope enforced by the OCI PAR.
+  objectPrefix: "logical/postgres/oci-dev/"
+
   uploadSecret:
     # OCI-only encrypted upload credential.
     # The plaintext Object Storage PAR URL is never stored in Git.
