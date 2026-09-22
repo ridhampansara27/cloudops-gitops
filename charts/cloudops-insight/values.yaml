@@ -261,3 +261,21 @@ cloudflared:
       memory: 128Mi
 
   nodeSelector: {}
+
+# ------------------------------------------------------------
+# PostgreSQL logical-backup upload credential
+# ------------------------------------------------------------
+
+postgresBackup:
+  uploadSecret:
+    # Disabled by default so local/AWS environments do not render
+    # the OCI-specific backup uploader credential.
+    enabled: false
+
+    # Kubernetes Secret produced by the Sealed Secrets controller.
+    name: cloudops-postgres-backup-upload
+
+    # Environment-specific kubeseal ciphertext.
+    #
+    # Never place the plaintext OCI PAR URL in Git.
+    encryptedParUrl: ""
