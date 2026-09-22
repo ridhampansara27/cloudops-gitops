@@ -263,10 +263,73 @@ cloudflared:
   nodeSelector: {}
 
 # ------------------------------------------------------------
-# PostgreSQL logical-backup upload credential
+# PostgreSQL logical backup
 # ------------------------------------------------------------
 
 postgresBackup:
+  # Backup workload remains disabled by default so AWS/local
+  # environments are unchanged.
+  enabled: false
+
+  # Daily backup schedule.
+  schedule: "15 2 * * *"
+
+  # Kubernetes interprets the cron expression using this timezone.
+  timeZone: "Etc/UTC"
+
+  # Keep the CronJob suspended until the first restore-capable
+  # validation run has been intentionally approved.
+  suspend: true
+
+  # Dedicated identity for the backup Pod.
+  serviceAccountName: cloudops-postgres-backup
+
+  # PostgreSQL Service exposed by this Helm chart.
+  databaseHost: cloudops-postgres
+  databasePort: 5432
+
+  # Environment-specific Object Storage prefix.
+  objectPrefix: ""
+
+  # Limit temporary node storage used while producing the dump.
+  workspaceSizeLimit: 5Gi
+
+  # Do not allow overlapping database dumps.
+  startingDeadlineSeconds: 1800
+  activeDeadlineSeconds: 3600
+
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  backoffLimit: 1
+
+  dump:
+    # Match the PostgreSQL major version used by the database server.
+    image: "docker.io/library/postgres:17-alpine"
+    pullPolicy: IfNotPresent
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  uploader:
+    # Versioned official curl container; never use latest.
+    image: "docker.io/curlimages/curl:8.21.0"
+    pullPolicy: IfNotPresent
+
+    resources:
+      requests:
+        cpu: 20m
+        memory: 32Mi
+
+      limits:
+        cpu: 150m
+        memory: 128Mi
+
   uploadSecret:
     # Disabled by default so local/AWS environments do not render
     # the OCI-specific backup uploader credential.

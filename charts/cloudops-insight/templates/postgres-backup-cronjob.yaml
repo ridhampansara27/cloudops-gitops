@@ -1,0 +1,351 @@
+{{- if .Values.postgresBackup.enabled }}
+
+{{- $backup := .Values.postgresBackup }}
+{{- $serviceAccountName := required "postgresBackup.serviceAccountName is required" $backup.serviceAccountName }}
+{{- $databaseHost := required "postgresBackup.databaseHost is required" $backup.databaseHost }}
+{{- $objectPrefix := required "postgresBackup.objectPrefix is required when backups are enabled" $backup.objectPrefix }}
+{{- $uploadSecretName := required "postgresBackup.uploadSecret.name is required" $backup.uploadSecret.name }}
+
+apiVersion: batch/v1
+kind: CronJob
+
+metadata:
+  name: cloudops-postgres-backup
+
+  labels:
+    app.kubernetes.io/name: cloudops-insight
+    app.kubernetes.io/component: postgres-backup
+    app.kubernetes.io/managed-by: Helm
+
+spec:
+  # The schedule is interpreted explicitly in the configured timezone.
+  schedule: {{ required "postgresBackup.schedule is required" $backup.schedule | quote }}
+  timeZone: {{ required "postgresBackup.timeZone is required" $backup.timeZone | quote }}
+
+  # Start fail-closed. The first execution is enabled only after review.
+  suspend: {{ $backup.suspend }}
+
+  # Never allow two logical database dumps to run concurrently.
+  concurrencyPolicy: Forbid
+
+  # Skip a run if Kubernetes cannot start it within this window.
+  startingDeadlineSeconds: {{ $backup.startingDeadlineSeconds }}
+
+  successfulJobsHistoryLimit: {{ $backup.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ $backup.failedJobsHistoryLimit }}
+
+  jobTemplate:
+    spec:
+      # Retry the complete Pod only once after a failure.
+      backoffLimit: {{ $backup.backoffLimit }}
+
+      # Prevent a hung dump/upload from running indefinitely.
+      activeDeadlineSeconds: {{ $backup.activeDeadlineSeconds }}
+
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: cloudops-insight
+            app.kubernetes.io/component: postgres-backup
+
+        spec:
+          # Dedicated zero-RBAC ServiceAccount.
+          serviceAccountName: {{ $serviceAccountName | quote }}
+
+          # Defense in depth: never mount the Kubernetes API token.
+          automountServiceAccountToken: false
+
+          restartPolicy: Never
+
+          securityContext:
+            # The shared emptyDir receives group 2000 so the dump container
+            # can create a file that the separate uploader can read.
+            fsGroup: 2000
+            fsGroupChangePolicy: OnRootMismatch
+
+            seccompProfile:
+              type: RuntimeDefault
+
+          # --------------------------------------------------------
+          # Database dump stage
+          #
+          # This container receives the PostgreSQL password but does
+          # NOT receive the OCI PAR credential.
+          # --------------------------------------------------------
+
+          initContainers:
+            - name: pg-dump
+
+              image: {{ $backup.dump.image | quote }}
+              imagePullPolicy: {{ $backup.dump.pullPolicy | quote }}
+
+              securityContext:
+                # postgres:17-alpine defines the postgres account as UID/GID 70.
+                #
+                # Kubernetes command overrides the image entrypoint here,
+                # so run pg_dump explicitly as the non-root postgres identity.
+                runAsNonRoot: true
+                runAsUser: 70
+                runAsGroup: 70
+
+                allowPrivilegeEscalation: false
+
+                capabilities:
+                  drop:
+                    - ALL
+
+              command:
+                - /bin/sh
+                - -ec
+
+              args:
+                - |
+                  # Files must be private to the Pod while remaining
+                  # group-readable by the uploader container.
+                  umask 027
+
+                  # Wait up to roughly 60 seconds for PostgreSQL.
+                  attempt=0
+
+                  until pg_isready \
+                    -q \
+                    -h "${PGHOST}" \
+                    -p "${PGPORT}" \
+                    -U "${PGUSER}" \
+                    -d "${PGDATABASE}"
+                  do
+                    attempt=$((attempt + 1))
+
+                    if [ "${attempt}" -ge 30 ]; then
+                      echo "PostgreSQL did not become ready." >&2
+                      exit 1
+                    fi
+
+                    sleep 2
+                  done
+
+                  # Use the Kubernetes Job name as the stable backup identity.
+                  #
+                  # Every Pod retry belonging to this Job therefore targets
+                  # the same Object Storage key. Combined with
+                  # If-None-Match: *, this makes upload retries idempotent.
+                  test -n "${JOB_NAME}"
+
+                  object_name="${OBJECT_PREFIX}${JOB_NAME}.dump"
+
+                  printf '%s\n' "${object_name}" > "${OBJECT_NAME_FILE}"
+
+                  # Produce PostgreSQL custom-format archive.
+                  #
+                  # -Fc is suitable for pg_restore and selective restore.
+                  pg_dump \
+                    -Fc \
+                    --file="${BACKUP_FILE}"
+
+                  # Never continue to upload an empty dump.
+                  test -s "${BACKUP_FILE}"
+
+                  # Print only non-sensitive operational metadata.
+                  dump_size="$(wc -c < "${BACKUP_FILE}")"
+
+                  printf 'PostgreSQL custom-format dump created: %s bytes\n' "${dump_size}"
+
+              env:
+                # Stable Kubernetes Job identity.
+                #
+                # Unlike the Pod hostname, this value remains the same when
+                # Kubernetes retries a failed Pod for the same Job.
+                - name: JOB_NAME
+
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: "metadata.labels['batch.kubernetes.io/job-name']"
+
+                # libpq/pg_dump connection target.
+                - name: PGHOST
+                  value: {{ $databaseHost | quote }}
+
+                - name: PGPORT
+                  value: {{ $backup.databasePort | quote }}
+
+                - name: PGDATABASE
+                  value: {{ .Values.postgres.database | quote }}
+
+                - name: PGUSER
+                  value: {{ .Values.postgres.username | quote }}
+
+                # Database password is exposed ONLY to pg-dump.
+                - name: PGPASSWORD
+
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secrets.existingSecret | quote }}
+                      key: POSTGRES_PASSWORD
+
+                - name: OBJECT_PREFIX
+                  value: {{ $objectPrefix | quote }}
+
+                - name: BACKUP_FILE
+                  value: /backup/cloudops.dump
+
+                - name: OBJECT_NAME_FILE
+                  value: /backup/object-name
+
+              resources:
+{{ toYaml $backup.dump.resources | indent 16 }}
+
+              volumeMounts:
+                - name: backup-workspace
+                  mountPath: /backup
+
+
+          # --------------------------------------------------------
+          # Object Storage upload stage
+          #
+          # This container receives the OCI PAR credential but does
+          # NOT receive the PostgreSQL password.
+          # --------------------------------------------------------
+
+          containers:
+            - name: uploader
+
+              image: {{ $backup.uploader.image | quote }}
+              imagePullPolicy: {{ $backup.uploader.pullPolicy | quote }}
+
+              securityContext:
+                allowPrivilegeEscalation: false
+
+                capabilities:
+                  drop:
+                    - ALL
+
+              command:
+                - /bin/sh
+                - -ec
+
+              args:
+                - |
+                  umask 027
+
+                  # Refuse to upload unless the dump and metadata exist.
+                  test -s "${BACKUP_FILE}"
+                  test -s "${OBJECT_NAME_FILE}"
+
+                  object_name="$(cat "${OBJECT_NAME_FILE}")"
+
+                  # Defense in depth:
+                  # the generated object name must remain inside the prefix
+                  # that was granted to the OCI PAR.
+                  case "${object_name}" in
+                    "${OBJECT_PREFIX}"*)
+                      ;;
+                    *)
+                      echo "Refusing object name outside configured prefix." >&2
+                      exit 1
+                      ;;
+                  esac
+
+                  # Validate only the non-secret shape of the bearer URL.
+                  # Never print PAR_URL.
+                  case "${PAR_URL}" in
+                    https://objectstorage.*.oraclecloud.com/p/*)
+                      ;;
+                    *)
+                      echo "PAR URL failed OCI endpoint validation." >&2
+                      exit 1
+                      ;;
+                  esac
+
+                  # Upload exactly one immutable backup object.
+                  #
+                  # If-None-Match: * makes Object Storage reject an
+                  # accidental overwrite of an existing object name.
+                  # Keep transport retries, but inspect the final HTTP status
+                  # ourselves so an idempotent precondition response can be
+                  # distinguished from a real failure.
+                  #
+                  # --silent also prevents curl from printing the bearer URL
+                  # in diagnostic output.
+                  set +e
+
+                  http_code="$(
+                    curl \
+                      --silent \
+                      --retry 5 \
+                      --retry-all-errors \
+                      --connect-timeout 10 \
+                      --max-time 1800 \
+                      --proto '=https' \
+                      --request PUT \
+                      --header "If-None-Match: *" \
+                      --header "Content-Type: application/octet-stream" \
+                      --output /dev/null \
+                      --write-out '%{http_code}' \
+                      --data-binary "@${BACKUP_FILE}" \
+                      "${PAR_URL}${object_name}"
+                  )"
+
+                  curl_exit="$?"
+
+                  set -e
+
+                  if [ "${curl_exit}" -ne 0 ]; then
+                    printf 'OCI upload transport failed (curl exit %s).\n' "${curl_exit}" >&2
+                    exit "${curl_exit}"
+                  fi
+
+                  case "${http_code}" in
+                    200)
+                      printf 'PostgreSQL backup uploaded: %s\n' "${object_name}"
+                      ;;
+
+                    412)
+                      # A retry of the same Kubernetes Job can reach this
+                      # state when the original PUT reached Object Storage
+                      # but the client did not receive the successful response.
+                      #
+                      # Because the Job name uniquely determines the object
+                      # key, an existing immutable object is successful
+                      # idempotent completion for this Job.
+                      printf 'PostgreSQL backup already exists for this Job: %s\n' "${object_name}"
+                      ;;
+
+                    *)
+                      printf 'OCI upload failed with HTTP %s.\n' "${http_code}" >&2
+                      exit 1
+                      ;;
+                  esac
+
+              env:
+                # OCI bearer credential is exposed ONLY to uploader.
+                - name: PAR_URL
+
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $uploadSecretName | quote }}
+                      key: par-url
+
+                - name: OBJECT_PREFIX
+                  value: {{ $objectPrefix | quote }}
+
+                - name: BACKUP_FILE
+                  value: /backup/cloudops.dump
+
+                - name: OBJECT_NAME_FILE
+                  value: /backup/object-name
+
+              resources:
+{{ toYaml $backup.uploader.resources | indent 16 }}
+
+              volumeMounts:
+                - name: backup-workspace
+                  mountPath: /backup
+
+          volumes:
+            # Dump exists only for the lifetime of the Job Pod.
+            - name: backup-workspace
+
+              emptyDir:
+                sizeLimit: {{ $backup.workspaceSizeLimit | quote }}
+
+{{- end }}
