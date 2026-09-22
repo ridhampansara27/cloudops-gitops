@@ -191,3 +191,18 @@ cloudflared:
 
   nodeSelector:
     kubernetes.io/arch: arm64
+
+# ------------------------------------------------------------
+# PostgreSQL logical-backup upload credential
+# ------------------------------------------------------------
+
+postgresBackup:
+  uploadSecret:
+    # OCI-only encrypted upload credential.
+    # The plaintext Object Storage PAR URL is never stored in Git.
+    enabled: true
+
+    # Strict-scope Sealed Secrets ciphertext bound to:
+    #   namespace: cloudops
+    #   name: cloudops-postgres-backup-upload
+    encryptedParUrl: "AgAKIFuiNY/GeoZhCP7Bweufz7UUAUVMvhvy+RmAkeJ6CHg5kp2YInjA2SgtFPJOLdI1ZvQMhGBm4b09mDC4wIfjxABEe8D4d7Fd6jZ6o45f2mPSHVmtshDJtAWMsRbKuB58xYkuU3ZlymxZQ5euUGQxXgSp1W8GmLIWMUQO1pVEHavJa07r2oeeAU9ecbe7vEbTN7AVQgw4p+Mj8Iu5yO41qjp4/gSBxbJRTjsXL1mJZdufsAEIsUNYw5s5ej4HrzZb3PzkB/2u4WnMSy+G9KEKTM3b7tmNq/GZRd1/6971gLQVAMvCczi7ZZdUcha9d3cC2M/NAr0tAu/5pWD1OrYtFadwEzeAjjTvIy3G5m1D2eoenogP3fcW5v2IpDVYEVXU7Pv7Ub/w1IjO/l1Z1nYmyiO34BF4wG35Mjo1IhSjCAQx0QmnE8uvYq2ZW0ZQgIFVVK5LxR7H49f/Zp1LCtJvHXyVbhmNeOBV/LzDHNg5pzTZPfOZTbU2kWlRYY+DLM+hGgu14G7tIgoIjitu/kmEs5UT7MLvwYXjJXLo/2mllTDL+XTqQGBgtbMprnfm3wVnR4qmlRzj1Xf3IeByuDlfw/39hRm+XuErcqhfoGI2XC/mFc7ANnoz5me1rWMY0GEquioC5j4nTjRo+TvCG8f9C72FkZiGNh4gizxhJiffBARhG40tloQbsv2LIei+xk+1+HxnkRc+F81NOD3Vy+dcleEty9GdbIen3Rt4xEHrQ7HDH4BethUvHnf2uz8STQOYRDJf5IL4rcRA1oczMUj1cV0WEqrU9PY2adsbERDZhGEGtp6XFu9yVVLTJjsS53kAAlWo18iHxQh6tm46xIuo/4RwuUe9ZjpkSIdtYethZ9RUoBuvoOe6pMyGrdCd7UB8Bwp4sEDT8iNTI93kiCYYTymBPaRFkbem6Wtlrvtvj7Taj4mK"
