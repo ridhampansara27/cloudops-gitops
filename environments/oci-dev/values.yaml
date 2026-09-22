@@ -217,6 +217,14 @@ postgresBackup:
   # Must exactly match the scope enforced by the OCI PAR.
   objectPrefix: "logical/postgres/oci-dev/"
 
+  # Temporary one-shot backup proof.
+  #
+  # Remove this Job again through GitOps after backup and restore
+  # validation is complete.
+  validationJob:
+    enabled: true
+    name: "cloudops-postgres-backup-validation-20260922-01"
+
   uploadSecret:
     # OCI-only encrypted upload credential.
     # The plaintext Object Storage PAR URL is never stored in Git.
