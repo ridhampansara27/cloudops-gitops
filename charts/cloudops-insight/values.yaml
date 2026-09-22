@@ -302,6 +302,14 @@ postgresBackup:
   failedJobsHistoryLimit: 3
   backoffLimit: 1
 
+  # One-shot backup validation.
+  #
+  # Disabled by default so no environment accidentally executes
+  # a database backup.
+  validationJob:
+    enabled: false
+    name: ""
+
   dump:
     # Match the PostgreSQL major version used by the database server.
     image: "docker.io/library/postgres:17-alpine"

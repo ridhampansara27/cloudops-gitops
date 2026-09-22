@@ -1,0 +1,278 @@
+{{- if and .Values.postgresBackup.enabled .Values.postgresBackup.validationJob.enabled }}
+
+# ------------------------------------------------------------------
+# TEMPORARY ONE-SHOT POSTGRESQL BACKUP VALIDATION JOB
+#
+# Derived from the deployed suspended CronJob's proven Job template.
+#
+# This Job is intentionally standalone:
+#   - no CronJob ownerReference
+#   - no recurring schedule
+#   - managed explicitly through GitOps
+#
+# Remove it again through GitOps after backup + restore validation.
+# ------------------------------------------------------------------
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ required "postgresBackup.validationJob.name is required" .Values.postgresBackup.validationJob.name | quote }}
+  namespace: cloudops
+spec:
+  activeDeadlineSeconds: 3600
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: postgres-backup
+        app.kubernetes.io/name: cloudops-insight
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - |
+          umask 027
+
+          # Refuse to upload unless the dump and metadata exist.
+          test -s "${BACKUP_FILE}"
+          test -s "${OBJECT_NAME_FILE}"
+
+          object_name="$(cat "${OBJECT_NAME_FILE}")"
+
+          # Defense in depth:
+          # the generated object name must remain inside the prefix
+          # that was granted to the OCI PAR.
+          case "${object_name}" in
+            "${OBJECT_PREFIX}"*)
+              ;;
+            *)
+              echo "Refusing object name outside configured prefix." >&2
+              exit 1
+              ;;
+          esac
+
+          # Validate only the non-secret shape of the bearer URL.
+          # Never print PAR_URL.
+          case "${PAR_URL}" in
+            https://objectstorage.*.oraclecloud.com/p/*)
+              ;;
+            *)
+              echo "PAR URL failed OCI endpoint validation." >&2
+              exit 1
+              ;;
+          esac
+
+          # Upload exactly one immutable backup object.
+          #
+          # If-None-Match: * makes Object Storage reject an
+          # accidental overwrite of an existing object name.
+          # Keep transport retries, but inspect the final HTTP status
+          # ourselves so an idempotent precondition response can be
+          # distinguished from a real failure.
+          #
+          # --silent also prevents curl from printing the bearer URL
+          # in diagnostic output.
+          set +e
+
+          http_code="$(
+            curl \
+              --silent \
+              --retry 5 \
+              --retry-all-errors \
+              --connect-timeout 10 \
+              --max-time 1800 \
+              --proto '=https' \
+              --request PUT \
+              --header "If-None-Match: *" \
+              --header "Content-Type: application/octet-stream" \
+              --output /dev/null \
+              --write-out '%{http_code}' \
+              --data-binary "@${BACKUP_FILE}" \
+              "${PAR_URL}${object_name}"
+          )"
+
+          curl_exit="$?"
+
+          set -e
+
+          if [ "${curl_exit}" -ne 0 ]; then
+            printf 'OCI upload transport failed (curl exit %s).\n' "${curl_exit}" >&2
+            exit "${curl_exit}"
+          fi
+
+          case "${http_code}" in
+            200)
+              printf 'PostgreSQL backup uploaded: %s\n' "${object_name}"
+              ;;
+
+            412)
+              # A retry of the same Kubernetes Job can reach this
+              # state when the original PUT reached Object Storage
+              # but the client did not receive the successful response.
+              #
+              # Because the Job name uniquely determines the object
+              # key, an existing immutable object is successful
+              # idempotent completion for this Job.
+              printf 'PostgreSQL backup already exists for this Job: %s\n' "${object_name}"
+              ;;
+
+            *)
+              printf 'OCI upload failed with HTTP %s.\n' "${http_code}" >&2
+              exit 1
+              ;;
+          esac
+        command:
+        - /bin/sh
+        - -ec
+        env:
+        - name: PAR_URL
+          valueFrom:
+            secretKeyRef:
+              key: par-url
+              name: cloudops-postgres-backup-upload
+        - name: OBJECT_PREFIX
+          value: logical/postgres/oci-dev/
+        - name: BACKUP_FILE
+          value: /backup/cloudops.dump
+        - name: OBJECT_NAME_FILE
+          value: /backup/object-name
+        image: docker.io/curlimages/curl:8.21.0
+        imagePullPolicy: IfNotPresent
+        name: uploader
+        resources:
+          limits:
+            cpu: 150m
+            memory: 128Mi
+          requests:
+            cpu: 20m
+            memory: 32Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /backup
+          name: backup-workspace
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - args:
+        - |
+          # Files must be private to the Pod while remaining
+          # group-readable by the uploader container.
+          umask 027
+
+          # Wait up to roughly 60 seconds for PostgreSQL.
+          attempt=0
+
+          until pg_isready \
+            -q \
+            -h "${PGHOST}" \
+            -p "${PGPORT}" \
+            -U "${PGUSER}" \
+            -d "${PGDATABASE}"
+          do
+            attempt=$((attempt + 1))
+
+            if [ "${attempt}" -ge 30 ]; then
+              echo "PostgreSQL did not become ready." >&2
+              exit 1
+            fi
+
+            sleep 2
+          done
+
+          # Use the Kubernetes Job name as the stable backup identity.
+          #
+          # Every Pod retry belonging to this Job therefore targets
+          # the same Object Storage key. Combined with
+          # If-None-Match: *, this makes upload retries idempotent.
+          test -n "${JOB_NAME}"
+
+          object_name="${OBJECT_PREFIX}${JOB_NAME}.dump"
+
+          printf '%s\n' "${object_name}" > "${OBJECT_NAME_FILE}"
+
+          # Produce PostgreSQL custom-format archive.
+          #
+          # -Fc is suitable for pg_restore and selective restore.
+          pg_dump \
+            -Fc \
+            --file="${BACKUP_FILE}"
+
+          # Never continue to upload an empty dump.
+          test -s "${BACKUP_FILE}"
+
+          # Print only non-sensitive operational metadata.
+          dump_size="$(wc -c < "${BACKUP_FILE}")"
+
+          printf 'PostgreSQL custom-format dump created: %s bytes\n' "${dump_size}"
+        command:
+        - /bin/sh
+        - -ec
+        env:
+        - name: JOB_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.labels['batch.kubernetes.io/job-name']
+        - name: PGHOST
+          value: cloudops-postgres
+        - name: PGPORT
+          value: "5432"
+        - name: PGDATABASE
+          value: cloudops
+        - name: PGUSER
+          value: cloudops
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: cloudops-secrets
+        - name: OBJECT_PREFIX
+          value: logical/postgres/oci-dev/
+        - name: BACKUP_FILE
+          value: /backup/cloudops.dump
+        - name: OBJECT_NAME_FILE
+          value: /backup/object-name
+        image: docker.io/library/postgres:17-alpine
+        imagePullPolicy: IfNotPresent
+        name: pg-dump
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsGroup: 70
+          runAsNonRoot: true
+          runAsUser: 70
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /backup
+          name: backup-workspace
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 2000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccount: cloudops-postgres-backup
+      serviceAccountName: cloudops-postgres-backup
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir:
+          sizeLimit: 5Gi
+        name: backup-workspace
+
+{{- end }}
