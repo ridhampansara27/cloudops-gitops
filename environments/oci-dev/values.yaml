@@ -204,10 +204,9 @@ postgresBackup:
   schedule: "15 2 * * *"
   timeZone: "Etc/UTC"
 
-  # Fail closed for the first deployment.
-  #
-  # We will unsuspend only after reviewing the rendered workload.
-  suspend: true
+  # Backup creation and isolated restore have both been validated.
+  # Enable the recurring production schedule.
+  suspend: false
 
   serviceAccountName: cloudops-postgres-backup
 
