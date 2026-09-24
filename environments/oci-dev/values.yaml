@@ -16,6 +16,13 @@ runtime:
   # Allow only the canonical production origin.
   corsOrigins: "https://cloudopsinsight.tech"
 
+  # Canonical AWS IAM user used by the OCI backend bootstrap credentials.
+  #
+  # STS GetCallerIdentity was verified from the live backend before this
+  # value was introduced. Customer trust policies may reference this
+  # non-secret IAM principal ARN.
+  awsPlatformPrincipalArn: "arn:aws:iam::902664897666:user/cloudops-oci-bootstrap"
+
   # Public registration remains intentionally disabled.
   publicSignupEnabled: false
 

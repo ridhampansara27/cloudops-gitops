@@ -40,6 +40,10 @@ data:
 
   AWS_ROLE_DURATION_SECONDS: "3600"
 
+  # Canonical CloudOps IAM identity embedded into generated customer
+  # AssumeRole trust policies. This is an IAM identity, not a secret.
+  AWS_PLATFORM_PRINCIPAL_ARN: {{ .Values.runtime.awsPlatformPrincipalArn | quote }}
+
   # Configure the canonical frontend origin used by authentication emails
   # and other generated browser links.
   FRONTEND_BASE_URL: {{ .Values.runtime.frontendBaseUrl | quote }}

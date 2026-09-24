@@ -17,6 +17,12 @@ runtime:
   # Browser origins permitted to call the API.
   corsOrigins: "http://localhost:5173,http://localhost:8080,http://cloudops.local"
 
+  # Canonical AWS IAM principal customers trust for sts:AssumeRole.
+  #
+  # Keep empty by default. Cloud-specific environments must explicitly
+  # configure the IAM user or role that actually makes AssumeRole calls.
+  awsPlatformPrincipalArn: ""
+
   # Commercial self-service signup remains fail-closed by default.
   publicSignupEnabled: false
 
