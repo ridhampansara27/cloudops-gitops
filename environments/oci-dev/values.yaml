@@ -23,8 +23,8 @@ runtime:
   # non-secret IAM principal ARN.
   awsPlatformPrincipalArn: "arn:aws:iam::902664897666:user/cloudops-oci-bootstrap"
 
-  # Public registration remains intentionally disabled.
-  publicSignupEnabled: false
+  # Temporarily enable public registration for controlled fresh-user E2E validation.
+  publicSignupEnabled: true
 
   # Transactional authentication email delivery.
   smtp:
