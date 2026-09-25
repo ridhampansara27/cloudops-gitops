@@ -23,9 +23,8 @@ runtime:
   # non-secret IAM principal ARN.
   awsPlatformPrincipalArn: "arn:aws:iam::902664897666:user/cloudops-oci-bootstrap"
 
-  # Temporarily enable public registration for controlled fresh-user E2E validation.
-  publicSignupEnabled: true
-
+  # Keep public registration disabled after controlled fresh-user E2E validation.
+  publicSignupEnabled: false
   # Transactional authentication email delivery.
   smtp:
     host: "smtp.resend.com"
@@ -57,7 +56,7 @@ backend:
 
   image:
     repository: "ghcr.io/ridhampansara27/cloudops-insight-backend"
-    tag: "sha-026a1a0ced7c0ab86f6183250b23ea79cf6492bf"
+    tag: "sha-bc5d723db36f4cb063fed760bbe9fd7042a16fb7"
     pullPolicy: IfNotPresent
 
 
@@ -70,7 +69,7 @@ frontend:
 
   image:
     repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
-    tag: "sha-026a1a0ced7c0ab86f6183250b23ea79cf6492bf"
+    tag: "sha-bc5d723db36f4cb063fed760bbe9fd7042a16fb7"
     pullPolicy: IfNotPresent
 
 
