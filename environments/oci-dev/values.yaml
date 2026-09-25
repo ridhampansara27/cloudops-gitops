@@ -69,7 +69,7 @@ frontend:
 
   image:
     repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
-    tag: "sha-bc5d723db36f4cb063fed760bbe9fd7042a16fb7"
+    tag: "sha-d04f1f4ed8373a9a29bc54fef1f75a097ff3c183"
     pullPolicy: IfNotPresent
 
 
