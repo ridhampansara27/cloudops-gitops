@@ -84,3 +84,7 @@ For rollback and restore decisions, use [deployment runbook](docs/runbooks/deplo
 Secrets are supplied outside plain Git. The backup upload PAR is stored as Sealed Secrets ciphertext bound to its Kubernetes namespace and Secret name. Never copy plaintext credentials into values, logs, issues, or PR descriptions.
 
 See [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md), [CHANGELOG.md](CHANGELOG.md), and the [OCI Terraform repository](https://github.com/ridhampansara27/cloudops-infrastructure).
+
+---
+
+© 2026 Ridham Pansara. All rights reserved.
