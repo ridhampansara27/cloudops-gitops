@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">CloudOps Insight CI, GitOps and PostgreSQL backup flow</title>
+  <desc id="desc">Application CI tests, scans and publishes SHA-tagged images. It proposes Kind and historical AWS development changes separately. A reviewed OCI values PR enters GitOps main, then Argo CD reconciles application resources and an operator controls the OKE workload sync. PostgreSQL has logical Object Storage and OCI Block Volume backups.</desc>
+  <defs>
+    <linearGradient id="page" x2="1" y2="1"><stop stop-color="#f8fbff"/><stop offset="1" stop-color="#f5f3ff"/></linearGradient>
+    <filter id="shadow" x="-15%" y="-25%" width="130%" height="160%"><feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#19274b" flood-opacity=".12"/></filter>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#64748b"/></marker>
+    <marker id="amber" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#d97706"/></marker>
+  </defs>
+  <rect width="1200" height="760" rx="22" fill="url(#page)"/>
+  <text x="42" y="57" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#101b3a">CI/CD + GitOps delivery</text>
+  <text x="42" y="87" font-family="Arial,sans-serif" font-size="15" fill="#52617c">Separate application build, development proposal, reviewed OCI promotion and controlled workload sync</text>
+
+  <rect x="38" y="125" width="1124" height="248" rx="18" fill="#eff6ff" stroke="#bfdbfe" stroke-width="2"/>
+  <text x="58" y="157" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#1d4ed8">APPLICATION REPOSITORY  /  IMAGE SUPPLY</text>
+  <rect x="62" y="187" width="195" height="93" rx="15" fill="#fff" stroke="#93c5fd" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="91" cy="218" r="16" fill="#dbeafe"/><path d="M83 211h16m-16 7h16m-16 7h12" stroke="#2563eb" stroke-width="2"/>
+  <text x="121" y="218" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172554">Application main</text>
+  <text x="82" y="254" font-family="Arial,sans-serif" font-size="12" fill="#64748b">backend · frontend · migrations</text>
+  <path d="M257 232h39" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="303" y="187" width="220" height="93" rx="15" fill="#fff" stroke="#93c5fd" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="333" cy="218" r="16" fill="#dbeafe"/><path d="M325 218l6 6 11-13" fill="none" stroke="#2563eb" stroke-width="2"/>
+  <text x="362" y="218" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172554">GitHub Actions</text>
+  <text x="323" y="254" font-family="Arial,sans-serif" font-size="12" fill="#64748b">tests · arm64/amd64 · Trivy</text>
+  <path d="M523 232h39" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="569" y="187" width="220" height="93" rx="15" fill="#fff" stroke="#93c5fd" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="599" cy="218" r="16" fill="#dbeafe"/><path d="M589 218h20m-14-6v12m8-12v12" stroke="#2563eb" stroke-width="2"/>
+  <text x="628" y="218" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#172554">GHCR</text>
+  <text x="589" y="254" font-family="Arial,sans-serif" font-size="12" fill="#64748b">scanned SHA-tagged images</text>
+  <path d="M789 232h39" stroke="#d97706" stroke-width="2.5" marker-end="url(#amber)"/>
+  <rect x="835" y="187" width="297" height="93" rx="15" fill="#fffbeb" stroke="#fbbf24" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="865" cy="218" r="16" fill="#fef3c7"/><path d="M865 207v14m0 5v1" stroke="#d97706" stroke-width="2"/>
+  <text x="894" y="218" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#78350f">Reviewed OCI values PR</text>
+  <text x="855" y="254" font-family="Arial,sans-serif" font-size="12" fill="#92400e">explicit image change · migration review</text>
+  <path d="M1000 280v109H166v69" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#amber)"/>
+  <path d="M413 280v32" stroke="#d97706" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#amber)"/>
+  <rect x="272" y="318" width="298" height="38" rx="11" fill="#fff7ed" stroke="#fdba74" stroke-width="2"/>
+  <text x="292" y="343" font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="#9a3412">Automatic dev PR → Kind / AWS</text>
+  <text x="602" y="343" font-family="Arial,sans-serif" font-size="12" fill="#64748b">This path does not change the OCI overlay.</text>
+
+  <rect x="38" y="399" width="1124" height="182" rx="18" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="2"/>
+  <text x="58" y="430" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#6d28d9">OCI APPLICATION TREE  /  CONTROLLED DELIVERY</text>
+  <rect x="62" y="458" width="208" height="91" rx="15" fill="#fff" stroke="#c4b5fd" stroke-width="2" filter="url(#shadow)"/>
+  <text x="82" y="493" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24154f">GitOps main</text>
+  <text x="82" y="517" font-family="Arial,sans-serif" font-size="12" fill="#64748b">OCI values + Helm chart</text>
+  <path d="M270 503h33" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="310" y="458" width="227" height="91" rx="15" fill="#fff" stroke="#c4b5fd" stroke-width="2" filter="url(#shadow)"/>
+  <text x="330" y="493" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24154f">OCI root Application</text>
+  <text x="330" y="517" font-family="Arial,sans-serif" font-size="12" fill="#64748b">reconciles child resources</text>
+  <path d="M537 503h33" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="577" y="458" width="240" height="91" rx="15" fill="#fff" stroke="#c4b5fd" stroke-width="2" filter="url(#shadow)"/>
+  <text x="597" y="493" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#24154f">OCI child Application</text>
+  <text x="597" y="517" font-family="Arial,sans-serif" font-size="12" fill="#64748b">no automated workload sync</text>
+  <path d="M817 503h41" stroke="#d97706" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#amber)"/>
+  <text x="823" y="563" font-family="Arial,sans-serif" font-size="11" fill="#92400e">operator sync</text>
+  <rect x="865" y="458" width="267" height="91" rx="15" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="2" filter="url(#shadow)"/>
+  <text x="885" y="493" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#064e3b">OCI OKE workloads</text>
+  <text x="885" y="517" font-family="Arial,sans-serif" font-size="12" fill="#64748b">frontend · API · worker · data</text>
+
+  <rect x="38" y="608" width="1124" height="114" rx="18" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="2"/>
+  <text x="58" y="637" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#047857">POSTGRESQL PROTECTION</text>
+  <text x="58" y="671" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#064e3b">PostgreSQL PVC</text>
+  <path d="M209 667h39" stroke="#059669" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="259" y="671" font-family="Arial,sans-serif" font-size="14" fill="#064e3b">daily pg_dump Job</text>
+  <path d="M408 667h39" stroke="#059669" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="458" y="671" font-family="Arial,sans-serif" font-size="14" fill="#064e3b">private Object Storage</text>
+  <path d="M695 645v55" stroke="#a7f3d0" stroke-width="2"/>
+  <text x="723" y="657" font-family="Arial,sans-serif" font-size="13" fill="#064e3b">Independent OCI Block Volume backups</text>
+  <text x="723" y="683" font-family="Arial,sans-serif" font-size="12" fill="#475569">Restore is proven in an isolated target before any cutover.</text>
+  <text x="42" y="748" font-family="Arial,sans-serif" font-size="12" fill="#64748b">GitOps describes desired state; this diagram is not proof of current live images or backup freshness.</text>
+</svg>

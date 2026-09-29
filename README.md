@@ -1,8 +1,29 @@
-# CloudOps Insight GitOps
+# CloudOps Insight · GitOps
 
-Reviewed Kubernetes desired state for [CloudOps Insight](https://github.com/ridhampansara27/cloudops-insight). This repository owns the deployable Helm chart, environment values, Argo CD applications, Cloudflare Tunnel connector, Sealed Secrets controller definition, and PostgreSQL logical-backup workload.
+[![GitOps Validation](https://github.com/ridhampansara27/cloudops-gitops/actions/workflows/gitops-validation.yml/badge.svg?branch=main)](https://github.com/ridhampansara27/cloudops-gitops/actions/workflows/gitops-validation.yml)
+![Helm chart 0.1.0](https://img.shields.io/badge/Helm%20chart-0.1.0-0F1689?logo=helm&logoColor=white)
+![Argo CD](https://img.shields.io/badge/GitOps-Argo%20CD-EF7B4D)
+![OCI OKE](https://img.shields.io/badge/Production-OCI%20OKE-7C3AED)
+![PostgreSQL backups](https://img.shields.io/badge/Backup-Logical%20%2B%20Volume-059669)
 
-> **Certified commercial-launch baseline (29 September 2026):** GitOps commit `473ad08567eb32d8ca09c59fdeb7c9199c07e3ff` deploys application images tagged `sha-29d8aede6537165e8cf051641c6b6f3f79709839` in the OCI values. Verify current `main` and Argo CD before operating the live service.
+**The reviewed deployment contract for CloudOps Insight.** This repository owns the Helm chart, environment values, OCI Argo CD application tree, Cloudflare Tunnel connector, Sealed Secrets controller definition and PostgreSQL logical-backup workload. Application code lives in [cloudops-insight](https://github.com/ridhampansara27/cloudops-insight); OCI resources live in [cloudops-infrastructure](https://github.com/ridhampansara27/cloudops-infrastructure).
+
+> [!IMPORTANT]
+> **The commercial service runs on OCI OKE.** The active overlay is `environments/oci-dev/values.yaml`, despite its historical name. At the certified 29 September 2026 snapshot, GitOps commit `473ad08567eb32d8ca09c59fdeb7c9199c07e3ff` selected application images `sha-29d8aede6537165e8cf051641c6b6f3f79709839`. Check current OCI values and Argo CD before an operation; these are snapshot identifiers.
+
+**Explore:** [Delivery architecture](#delivery-architecture) · [Environments](#active-versus-historical-environments) · [Versions](#repository-map-and-versions) · [Validation](#validate-a-proposed-change-windows-powershell) · [Operations](#production-change-and-rollback)
+
+## Delivery architecture
+
+![Color-coded CI/CD and OCI GitOps architecture showing automatic development proposals, reviewed production promotion, controlled Argo CD sync and PostgreSQL backup layers](docs/diagrams/gitops-delivery.svg)
+
+Application CI publishes tested and scanned SHA-tagged images to GHCR. Its automatic deployment PR changes only Kind and historical AWS development overlays. OCI promotion is a separate reviewed change to this repository; the OCI root reconciles Argo CD **Application objects**, while the CloudOps child requires a controlled workload sync. [Detailed GitOps and backup flow](docs/architecture.md) and [deployment rollback](docs/runbooks/deployment-rollback.md) explain the operational sequence.
+
+| Boundary | Owner | What happens |
+|---|---|---|
+| Build and scan | [Application repository](https://github.com/ridhampansara27/cloudops-insight) | Tests, Trivy scan, `linux/amd64` and `linux/arm64` image publication |
+| Desired state | **This repository** | Helm templates, OCI values, Argo CD applications and logical dump CronJob |
+| Cloud resources | [Infrastructure repository](https://github.com/ridhampansara27/cloudops-infrastructure) | VCN, OKE, Block Volume policy, Object Storage and recovery resources |
 
 ## Active versus historical environments
 
@@ -16,29 +37,7 @@ Reviewed Kubernetes desired state for [CloudOps Insight](https://github.com/ridh
 
 The historical name `oci-dev` and `runtime.appEnv: staging` do not accurately describe the externally available commercial deployment. They are documented facts at this revision; correcting them requires a separately reviewed production change. AWS is still supported as a **monitored customer cloud**, not as this service's current host.
 
-## GitOps delivery
-
-```mermaid
-flowchart LR
-    APP["Application main"] --> CI["Tests · image build · Trivy"]
-    CI --> REG["GHCR · immutable SHA tags"]
-    CI --> DEV["Development promotion PR"]
-    REVIEW["Reviewed OCI image update"] --> MAIN["GitOps main"]
-    MAIN --> ROOT["OCI root Application"]
-    ROOT --> CHILD["OCI child Application"]
-    CHILD -->|"controlled sync"| OKE["OKE workloads"]
-    REG --> OKE
-    classDef source fill:#dbeafe,stroke:#2563eb,color:#172554;
-    classDef gate fill:#fef3c7,stroke:#d97706,color:#78350f;
-    classDef delivery fill:#ede9fe,stroke:#7c3aed,color:#2e1065;
-    classDef target fill:#dcfce7,stroke:#16a34a,color:#14532d;
-    class APP,CI,REG source;
-    class DEV,REVIEW gate;
-    class MAIN,ROOT,CHILD delivery;
-    class OKE target;
-```
-
-The OCI root automatically reconciles **Application resources** from `argocd/oci-applications`. The OCI CloudOps child does not declare automated sync; workload changes require a controlled sync. The application CI's automatically generated PR updates Kind and historical AWS development values, **not** OCI. GitOps PR #62 is intentionally open for those development values.
+The OCI root automatically reconciles **Application resources** from `argocd/oci-applications`. The OCI CloudOps child does not declare automated sync; workload changes require a controlled sync. The application CI's automatically generated PR updates Kind and historical AWS development values, **not** OCI. Development proposals are reviewed independently of OCI promotions.
 
 ## Repository map and versions
 
