@@ -36,6 +36,13 @@ spec:
   # after secrets, storage and migration prerequisites are validated.
 
   syncPolicy:
+    # TEMPORARY: one-off automated sync while kubectl access to the
+    # OKE API is unavailable. Revert to manual sync after rollout.
+    automated:
+      enabled: true
+      prune: false
+      selfHeal: false
+
     syncOptions:
       - CreateNamespace=true
       - PruneLast=true
