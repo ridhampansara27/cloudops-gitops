@@ -1,0 +1,23 @@
+# Argo CD Application for Jarvis. Put it in cloudops-gitops/argocd/oci-applications/ (cloudops-oci-root picks
+# it up) together with jarvis-repo-sealed.yaml, which lets Argo read this private repo — docs/cloud-setup.md, step 5.
+# Auto-sync is on so the image tag CI commits after each build rolls out without you.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jarvis
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ridhampansara27/jarvis-assistant.git
+    targetRevision: main
+    path: deploy/k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: jarvis
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]
+    retry:
+      limit: 5
+      backoff: { duration: 10s, factor: 2, maxDuration: 3m }
