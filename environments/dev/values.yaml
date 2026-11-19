@@ -14,7 +14,7 @@ backend:
     # GitHub Actions will replace this after the first GHCR deployment.
     repository: "ghcr.io/ridhampansara27/cloudops-insight-backend"
 
-    tag: "sha-c71ef778dda1a4fd1691ee5ddaa7a69d8556eb5a"
+    tag: "sha-c004cd5c92de868cba00e28ae52c363a23ff9be8"
 
     pullPolicy: IfNotPresent
 
@@ -29,7 +29,7 @@ frontend:
   image:
     repository: "ghcr.io/ridhampansara27/cloudops-insight-frontend"
 
-    tag: "sha-c71ef778dda1a4fd1691ee5ddaa7a69d8556eb5a"
+    tag: "sha-c004cd5c92de868cba00e28ae52c363a23ff9be8"
 
     pullPolicy: IfNotPresent
 
